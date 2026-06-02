@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verse Matching Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f0d0b;
+  --surface: #1a1510;
+  --surface2: #231d15;
+  --gold: #c9963a;
+  --gold-dim: rgba(201,150,58,0.4);
+  --cream: #f0e8d8;
+  --muted: #7a6a58;
+  --border: rgba(201,150,58,0.15);
+  --border-bright: rgba(201,150,58,0.4);
+}
+
+body {
+  background: var(--bg);
+  color: var(--cream);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  padding: 0 0 80px;
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(201,150,58,0.07) 0%, transparent 60%);
+}
+
+.hero {
+  text-align: center;
+  padding: 44px 24px 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 500;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+
+.hero h1 em { font-style: italic; color: var(--gold); }
+.hero-sub { font-size: 0.78rem; color: var(--muted); }
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 16px 24px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat-divider { width: 1px; height: 28px; background: var(--border); }
+
+.new-btn {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  color: var(--gold);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.73rem;
+  letter-spacing: 0.08em;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: 400;
+}
+
+.new-btn:hover { background: rgba(201,150,58,0.08); }
+
+/* Message */
+#msg {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+  padding: 4px 0 14px;
+  min-height: 30px;
+  transition: color 0.2s;
+}
+
+#msg.good { color: #7fb86a; }
+#msg.bad  { color: #d4785a; }
+
+/* Grid — always 4×4 */
+#grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Card */
+.card {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s,
+              opacity 0.5s ease, scale 0.5s ease;
+  user-select: none;
+}
+
+.card:hover:not(.matched):not(.selected):not(.wrong) {
+  background: var(--surface2);
+  border-color: var(--border-bright);
+  transform: translateY(-2px);
+}
+
+.card-type {
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.card-text {
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--cream);
+  flex: 1;
+}
+
+.card-ref {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--gold);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* States */
+.card.selected {
+  border-color: #c9963a;
+  background: rgba(201,150,58,0.1);
+  transform: translateY(-2px);
+}
+
+.card.wrong {
+  border-color: #d4785a;
+  background: rgba(212,120,90,0.1);
+}
+
+/* Fade-out on match */
+.card.matched {
+  opacity: 0;
+  scale: 0.92;
+  pointer-events: none;
+  border-color: rgba(127,184,106,0.3);
+}
+
+/* Win banner */
+#win {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  max-width: 420px;
+  margin: 28px auto 0;
+  padding: 28px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border-bright);
+  border-radius: 16px;
+}
+
+#win.show { display: flex; }
+
+#win-time {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem;
+  font-weight: 400;
+  color: var(--gold);
+  line-height: 1;
+}
+
+#win-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  color: var(--cream);
+}
+
+#win-sub, #win-best { font-size: 0.8rem; color: var(--muted); }
+#win-best { color: var(--gold); font-size: 0.75rem; }
+#win .new-btn { margin-top: 6px; }
+
+@media (max-width: 500px) {
+  #grid { grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 12px; }
+  .card { min-height: 80px; padding: 8px; }
+  .card-text { font-size: 0.66rem; }
+  .card-ref { font-size: 0.82rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <p class="hero-eyebrow">Scripture Matching Game</p>
+  <h1>Match the <em>Reference</em> to the <em>Verse</em></h1>
+  <p class="hero-sub">8 random pairs · 4×4 grid · race the clock</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><span class="stat-val" id="s-time">0.0s</span><span class="stat-label">Time</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><span class="stat-val" id="s-match">0/8</span><span class="stat-label">Matched</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><span class="stat-val" id="s-err">0</span><span class="stat-label">Errors</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><span class="stat-val" id="s-best">—</span><span class="stat-label">Best</span></div>
+  <div class="stat-divider"></div>
+  <button class="new-btn" onclick="newGame()">↺ New Game</button>
+</div>
+
+<div id="msg">Select a reference or verse to begin.</div>
+<div id="grid"></div>
+
+<div id="win">
+  <div id="win-title">All matched!</div>
+  <div id="win-time"></div>
+  <div id="win-sub"></div>
+  <div id="win-best"></div>
+  <button class="new-btn" onclick="newGame()">Play again</button>
+</div>
+
+<script>
+const ALL_PAIRS = [
+  {
+    ref: "Acts 17:11",
+    verse: "They received the word with all readiness, and searched the Scriptures daily to find out whether these things were so."
+  },
+  {
+    ref: "Hebrews 11:6",
+    verse: "Without faith it is impossible to please Him, for he who comes to God must believe that He is, and that He is a rewarder of those who diligently seek Him."
+  },
+  {
+    ref: "John 6:37–40",
+    verse: "All that the Father gives Me will come to Me… I should lose nothing, but should raise it up at the last day."
+  },
+  {
+    ref: "2 Peter 1:20–21",
+    verse: "No prophecy of Scripture is of any private interpretation… holy men of God spoke as they were moved by the Holy Spirit."
+  },
+  {
+    ref: "John 14:25–26",
+    verse: "The Holy Spirit, whom the Father will send in My name, He will teach you all things, and bring to your remembrance all things that I said to you."
+  },
+  {
+    ref: "Isaiah 35:5–6",
+    verse: "The eyes of the blind shall be opened, and the ears of the deaf unstopped. The lame shall leap like a deer, and the tongue of the dumb sing."
+  },
+  {
+    ref: "2 Peter 1:16",
+    verse: "We did not follow cunningly devised fables… but were eyewitnesses of His majesty."
+  },
+  {
+    ref: "John 16:30",
+    verse: "Now we are sure that You know all things… By this we believe that You came forth from God."
+  },
+  {
+    ref: "Acts 4:18–20",
+    verse: "They commanded them not to speak at all nor teach in the name of Jesus… we cannot but speak the things which we have seen and heard."
+  },
+  {
+    ref: "Mark 14:60–62",
+    verse: "The high priest asked, 'Are You the Christ?' Jesus said, 'I am. You will see the Son of Man sitting at the right hand of Power, coming with the clouds of heaven.'"
+  },
+  {
+    ref: "2 Cor. 3:14–16",
+    verse: "Their minds were blinded… the veil is taken away in Christ. When one turns to the Lord, the veil is taken away."
+  },
+  {
+    ref: "Acts 3:18",
+    verse: "Those things which God foretold by the mouth of all His prophets, that the Christ would suffer, He has thus fulfilled."
+  },
+  {
+    ref: "Isaiah 53:5",
+    verse: "He was wounded for our transgressions, bruised for our iniquities; the chastisement for our peace was upon Him, and by His stripes we are healed."
+  },
+  {
+    ref: "Matthew 22:29",
+    verse: "You are mistaken, not knowing the Scriptures nor the power of God."
+  }
+];
+
+let selected = null;
+let matchedCount = 0;
+let errors = 0;
+let startTime = null;
+let timerInterval = null;
+let bestTime = null;
+let done = false;
+
+function fmt(ms) { return (ms / 1000).toFixed(1) + 's'; }
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function setMsg(text, cls) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.className = cls || '';
+}
+
+function newGame() {
+  clearInterval(timerInterval);
+  selected = null;
+  matchedCount = 0;
+  errors = 0;
+  startTime = null;
+  done = false;
+
+  document.getElementById('s-time').textContent = '0.0s';
+  document.getElementById('s-match').textContent = '0/8';
+  document.getElementById('s-err').textContent = '0';
+  document.getElementById('s-best').textContent = bestTime !== null ? fmt(bestTime) : '—';
+  document.getElementById('win').classList.remove('show');
+  setMsg('Select a reference or verse to begin.', '');
+
+  // Pick 8 random pairs
+  const pairs = shuffle(ALL_PAIRS).slice(0, 8);
+
+  // Build 16 tiles
+  const items = [];
+  pairs.forEach((p, i) => {
+    items.push({ id: i, kind: 'ref',   text: p.ref });
+    items.push({ id: i, kind: 'verse', text: p.verse });
+  });
+  const tiles = shuffle(items);
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  tiles.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.dataset.id   = item.id;
+    div.dataset.kind = item.kind;
+
+    const typeEl = document.createElement('div');
+    typeEl.className = 'card-type';
+    typeEl.textContent = item.kind === 'ref' ? 'Reference' : 'Verse';
+
+    const textEl = document.createElement('div');
+    textEl.className = item.kind === 'ref' ? 'card-ref' : 'card-text';
+    textEl.textContent = item.text;
+
+    div.appendChild(typeEl);
+    div.appendChild(textEl);
+    div.addEventListener('click', () => handleClick(div));
+    grid.appendChild(div);
+  });
+}
+
+function startTimer() {
+  if (startTime !== null) return;
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    if (!done) document.getElementById('s-time').textContent = fmt(Date.now() - startTime);
+  }, 100);
+}
+
+function handleClick(div) {
+  if (done) return;
+  if (div.classList.contains('matched') || div.classList.contains('wrong')) return;
+
+  startTimer();
+
+  // Deselect if clicking the same card
+  if (selected === div) {
+    div.classList.remove('selected');
+    selected = null;
+    setMsg('Select a reference or verse.', '');
+    return;
+  }
+
+  // First selection
+  if (!selected) {
+    div.classList.add('selected');
+    selected = div;
+    setMsg(div.dataset.kind === 'ref' ? 'Now find the matching verse.' : 'Now find the matching reference.', '');
+    return;
+  }
+
+  // Second selection — same type, swap selection
+  if (selected.dataset.kind === div.dataset.kind) {
+    selected.classList.remove('selected');
+    selected = div;
+    div.classList.add('selected');
+    setMsg('Pick one reference and one verse.', '');
+    return;
+  }
+
+  const a = selected, b = div;
+  a.classList.remove('selected');
+  selected = null;
+
+  if (a.dataset.id === b.dataset.id) {
+    // Correct — fade out after brief green flash
+    a.classList.add('matched');
+    b.classList.add('matched');
+    matchedCount++;
+    document.getElementById('s-match').textContent = `${matchedCount}/8`;
+    if (matchedCount === 8) {
+      // Small delay so user sees last pair fade before win screen
+      setTimeout(finish, 550);
+    } else {
+      setMsg('✓ Correct!', 'good');
+    }
+  } else {
+    // Wrong
+    errors++;
+    document.getElementById('s-err').textContent = errors;
+    a.classList.add('wrong');
+    b.classList.add('wrong');
+    setMsg('✗ Not a match — try again.', 'bad');
+    setTimeout(() => {
+      a.classList.remove('wrong');
+      b.classList.remove('wrong');
+    }, 700);
+  }
+}
+
+function finish() {
+  clearInterval(timerInterval);
+  done = true;
+  const elapsed = Date.now() - startTime;
+  const isNew = bestTime === null || elapsed < bestTime;
+  if (isNew) bestTime = elapsed;
+
+  document.getElementById('s-time').textContent = fmt(elapsed);
+  document.getElementById('s-best').textContent = fmt(bestTime);
+  document.getElementById('win-time').textContent = fmt(elapsed);
+  document.getElementById('win-sub').textContent = errors === 0
+    ? 'Perfect — no errors!'
+    : `${errors} error${errors !== 1 ? 's' : ''}`;
+  document.getElementById('win-best').textContent = isNew
+    ? '🏆 New best time!'
+    : `Best: ${fmt(bestTime)}`;
+  document.getElementById('win').classList.add('show');
+}
+
+newGame();
+</script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History Dates Matching Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0b0f;
+  --surface: #16131a;
+  --surface2: #1e1a24;
+  --purple: #9b6fc4;
+  --purple-dim: rgba(155,111,196,0.4);
+  --purple-faint: rgba(155,111,196,0.08);
+  --cream: #f0eaf8;
+  --muted: #6e6478;
+  --border: rgba(155,111,196,0.15);
+  --border-bright: rgba(155,111,196,0.4);
+}
+
+body {
+  background: var(--bg);
+  color: var(--cream);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  padding: 0 0 80px;
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(155,111,196,0.08) 0%, transparent 60%);
+}
+
+.hero {
+  text-align: center;
+  padding: 44px 24px 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--purple);
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 500;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+
+.hero h1 em { font-style: italic; color: var(--purple); }
+.hero-sub { font-size: 0.78rem; color: var(--muted); }
+
+.stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 16px 24px;
+  flex-wrap: wrap;
+}
+
+.stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+
+.stat-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--purple);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat-divider { width: 1px; height: 28px; background: var(--border); }
+
+.new-btn {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  color: var(--purple);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.73rem;
+  letter-spacing: 0.08em;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: 400;
+}
+
+.new-btn:hover { background: var(--purple-faint); }
+
+#msg {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+  padding: 4px 0 14px;
+  min-height: 30px;
+  transition: color 0.2s;
+}
+
+#msg.good { color: #7fb86a; }
+#msg.bad  { color: #d4785a; }
+
+#grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.card {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s,
+              opacity 0.5s ease, scale 0.5s ease;
+  user-select: none;
+}
+
+.card:hover:not(.matched):not(.selected):not(.wrong) {
+  background: var(--surface2);
+  border-color: var(--border-bright);
+  transform: translateY(-2px);
+}
+
+.card-type {
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--purple-dim);
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.card-text {
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--cream);
+  flex: 1;
+}
+
+.card-date {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-style: italic;
+  color: var(--purple);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 400;
+}
+
+.card.selected {
+  border-color: var(--purple);
+  background: var(--purple-faint);
+  transform: translateY(-2px);
+}
+
+.card.wrong {
+  border-color: #d4785a;
+  background: rgba(212,120,90,0.1);
+}
+
+.card.matched {
+  opacity: 0;
+  scale: 0.92;
+  pointer-events: none;
+}
+
+#win {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  max-width: 400px;
+  margin: 28px auto 0;
+  padding: 28px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border-bright);
+  border-radius: 16px;
+}
+
+#win.show { display: flex; }
+
+#win-time {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem;
+  font-weight: 400;
+  color: var(--purple);
+  line-height: 1;
+}
+
+#win-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  color: var(--cream);
+}
+
+#win-sub, #win-best { font-size: 0.8rem; color: var(--muted); }
+#win-best { color: var(--purple); font-size: 0.75rem; }
+#win .new-btn { margin-top: 6px; }
+
+@media (max-width: 500px) {
+  #grid { gap: 6px; padding: 0 12px; }
+  .card { min-height: 80px; padding: 8px; }
+  .card-text { font-size: 0.66rem; }
+  .card-date { font-size: 1.3rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <p class="hero-eyebrow">History Matching Game</p>
+  <h1>Match the <em>Event</em> to the <em>Date</em></h1>
+  <p class="hero-sub">8 random pairs · 4×4 grid · race the clock</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><span class="stat-val" id="s-time">0.0s</span><span class="stat-label">Time</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><span class="stat-val" id="s-match">0/8</span><span class="stat-label">Matched</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><span class="stat-val" id="s-err">0</span><span class="stat-label">Errors</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat"><span class="stat-val" id="s-best">—</span><span class="stat-label">Best</span></div>
+  <div class="stat-divider"></div>
+  <button class="new-btn" onclick="newGame()">↺ New Game</button>
+</div>
+
+<div id="msg">Select an event or date to begin.</div>
+<div id="grid"></div>
+
+<div id="win">
+  <div id="win-title">All matched!</div>
+  <div id="win-time"></div>
+  <div id="win-sub"></div>
+  <div id="win-best"></div>
+  <button class="new-btn" onclick="newGame()">Play again</button>
+</div>
+
+<script>
+const ALL_PAIRS = [
+  { event: "Gutenberg's Printing Press Invented",                       date: "1453" },
+  { event: "Martin Luther nails his Ninety-Five Theses",                date: "1517" },
+  { event: "The Prince was written",                                     date: "1513" },
+  { event: "The KJV Bible was published",                                date: "1611" },
+  { event: "The Wycliffe Bible was published",                           date: "1382" },
+  { event: "The Great Bible was published",                              date: "1539" },
+  { event: "England passed the Act of Supremacy",                        date: "1534" },
+  { event: "Augsburg Confession",                                        date: "1530" },
+  { event: "Queen Elizabeth signs the Thirty-Nine Articles",             date: "1571" },
+  { event: "King Henry signs the Six Articles",                          date: "1539" },
+  { event: "St. Bartholomew's Day Massacre",                             date: "1572" },
+  { event: "Edict of Nantes",                                            date: "1598" },
+  { event: "The Council of Trent",                                       date: "1560" },
+  { event: "America discovered by Christopher Columbus",                 date: "1492" },
+];
+
+let selected = null;
+let matchedCount = 0;
+let errors = 0;
+let startTime = null;
+let timerInterval = null;
+let bestTime = null;
+let done = false;
+
+function fmt(ms) { return (ms / 1000).toFixed(1) + 's'; }
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function setMsg(text, cls) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.className = cls || '';
+}
+
+function newGame() {
+  clearInterval(timerInterval);
+  selected = null;
+  matchedCount = 0;
+  errors = 0;
+  startTime = null;
+  done = false;
+
+  document.getElementById('s-time').textContent = '0.0s';
+  document.getElementById('s-match').textContent = '0/8';
+  document.getElementById('s-err').textContent = '0';
+  document.getElementById('s-best').textContent = bestTime !== null ? fmt(bestTime) : '—';
+  document.getElementById('win').classList.remove('show');
+  setMsg('Select an event or date to begin.', '');
+
+  // Pick 8 random pairs — note: The Great Bible (1539) and King Henry Six Articles (1539)
+  // share the same date, so we shuffle and deduplicate dates in the picked set to avoid
+  // ambiguous tiles. Keep picking until 8 pairs with unique dates are selected.
+  let pairs;
+  const shuffled = shuffle(ALL_PAIRS);
+  const usedDates = new Set();
+  pairs = [];
+  for (const p of shuffled) {
+    if (!usedDates.has(p.date)) {
+      usedDates.add(p.date);
+      pairs.push(p);
+    }
+    if (pairs.length === 8) break;
+  }
+
+  const items = [];
+  pairs.forEach((p, i) => {
+    items.push({ id: i, kind: 'event', text: p.event });
+    items.push({ id: i, kind: 'date',  text: p.date  });
+  });
+  const tiles = shuffle(items);
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  tiles.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.dataset.id   = item.id;
+    div.dataset.kind = item.kind;
+
+    const typeEl = document.createElement('div');
+    typeEl.className = 'card-type';
+    typeEl.textContent = item.kind === 'event' ? 'Event' : 'Date';
+
+    const textEl = document.createElement('div');
+    textEl.className = item.kind === 'event' ? 'card-text' : 'card-date';
+    textEl.textContent = item.text;
+
+    div.appendChild(typeEl);
+    div.appendChild(textEl);
+    div.addEventListener('click', () => handleClick(div));
+    grid.appendChild(div);
+  });
+}
+
+function startTimer() {
+  if (startTime !== null) return;
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    if (!done) document.getElementById('s-time').textContent = fmt(Date.now() - startTime);
+  }, 100);
+}
+
+function handleClick(div) {
+  if (done) return;
+  if (div.classList.contains('matched') || div.classList.contains('wrong')) return;
+
+  startTimer();
+
+  if (selected === div) {
+    div.classList.remove('selected');
+    selected = null;
+    setMsg('Select an event or date.', '');
+    return;
+  }
+
+  if (!selected) {
+    div.classList.add('selected');
+    selected = div;
+    setMsg(div.dataset.kind === 'event' ? 'Now find the matching date.' : 'Now find the matching event.', '');
+    return;
+  }
+
+  if (selected.dataset.kind === div.dataset.kind) {
+    selected.classList.remove('selected');
+    selected = div;
+    div.classList.add('selected');
+    setMsg('Pick one event and one date.', '');
+    return;
+  }
+
+  const a = selected, b = div;
+  a.classList.remove('selected');
+  selected = null;
+
+  if (a.dataset.id === b.dataset.id) {
+    a.classList.add('matched');
+    b.classList.add('matched');
+    matchedCount++;
+    document.getElementById('s-match').textContent = `${matchedCount}/8`;
+    if (matchedCount === 8) {
+      setTimeout(finish, 550);
+    } else {
+      setMsg('✓ Correct!', 'good');
+    }
+  } else {
+    errors++;
+    document.getElementById('s-err').textContent = errors;
+    a.classList.add('wrong');
+    b.classList.add('wrong');
+    setMsg('✗ Not a match — try again.', 'bad');
+    setTimeout(() => {
+      a.classList.remove('wrong');
+      b.classList.remove('wrong');
+    }, 700);
+  }
+}
+
+function finish() {
+  clearInterval(timerInterval);
+  done = true;
+  const elapsed = Date.now() - startTime;
+  const isNew = bestTime === null || elapsed < bestTime;
+  if (isNew) bestTime = elapsed;
+
+  document.getElementById('s-time').textContent = fmt(elapsed);
+  document.getElementById('s-best').textContent = fmt(bestTime);
+  document.getElementById('win-time').textContent = fmt(elapsed);
+  document.getElementById('win-sub').textContent = errors === 0
+    ? 'Perfect — no errors!'
+    : `${errors} error${errors !== 1 ? 's' : ''}`;
+  document.getElementById('win-best').textContent = isNew
+    ? '🏆 New best time!'
+    : `Best: ${fmt(bestTime)}`;
+  document.getElementById('win').classList.add('show');
+}
+
+newGame();
+</script>
+</body>
+</html>
