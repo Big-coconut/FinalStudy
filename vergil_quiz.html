@@ -641,9 +641,16 @@ textarea::placeholder { color: var(--parchment-dark); font-style: italic; }
 }
 .chunk-pill:hover { background: var(--parchment-dark); }
 .chunk-pill.active { background: var(--ink); color: var(--gold-light); border-color: var(--ink); }
-.chunk-pill.done { border-color: var(--sage); color: var(--sage); }
-.chunk-pill.review { border-color: var(--gold); color: var(--gold); }
-.chunk-pill.done.active, .chunk-pill.review.active { background: var(--ink); color: var(--gold-light); border-color: var(--ink); }
+.chunk-pill.grade-excellent { border-color: var(--sage); color: var(--sage); background: rgba(74,103,65,0.28); }
+.chunk-pill.grade-good     { border-color: #5a8a5a; color: #5a8a5a; background: rgba(90,138,90,0.22); }
+.chunk-pill.grade-fair     { border-color: var(--slate-light); color: var(--slate-light); background: transparent; }
+.chunk-pill.grade-poor     { border-color: #8b2a2a; color: #8b2a2a; background: rgba(139,42,42,0.25); }
+.chunk-pill.review         { border-color: var(--gold); color: var(--gold); background: rgba(201,146,42,0.18); }
+.chunk-pill.grade-excellent.active,
+.chunk-pill.grade-good.active,
+.chunk-pill.grade-fair.active,
+.chunk-pill.grade-poor.active,
+.chunk-pill.review.active  { background: var(--ink); color: var(--gold-light); border-color: var(--ink); }
 
 /* ── DICTIONARY PANEL ── */
 .dict-panel {
@@ -1622,8 +1629,8 @@ const BOOKS = [...new Set(LESSONS.map(l => l.book))];
 // ── Proxy config ─────────────────────────────────────────────────────
 // Set PROXY_URL to your deployed Apps Script web app URL.
 // Leave as '' to use direct Anthropic API (requires API key in browser).
-const PROXY_URL    = 'https://script.google.com/macros/s/AKfycbxI7sCP7zAz80iPCkGbjaUrFicC4V1mCNczS_I-jIGNrthc41RBBT7Fq_CwStoX2DXT/exec';   // e.g. 'https://script.google.com/macros/s/ABC.../exec'
-const APP_SECRET   = 'vergil-2026';   // must match APP_SECRET Script Property in Apps Script
+const PROXY_URL    = 'https://script.google.com/macros/s/AKfycbxI7sCP7zAz80iPCkGbjaUrFicC4V1mCNczS_I-jIGNrthc41RBBT7Fq_CwStoX2DXT/exec';
+const APP_SECRET   = 'vergil-2026';
 // ─────────────────────────────────────────────────────────────────────
 
 let state = {
@@ -1657,9 +1664,10 @@ function getLessonProgress(lesson) {
   const p = state.progress[lesson.id] || {};
   const chunks = getChunks(lesson);
   let done = 0, review = 0;
+  const grades = ['excellent','good','fair','poor'];
   chunks.forEach((c,i) => {
     const s = p[i];
-    if (s === 'done') done++;
+    if (grades.includes(s)) done++;       // any graded attempt counts as done
     else if (s === 'review') review++;
   });
   return { done, review, total: chunks.length };
@@ -1759,17 +1767,23 @@ function renderTOC() {
       const chunks = getChunks(l);
       const p = state.progress[l.id] || {};
       const pills = chunks.map((ch, i) => {
-        const chunkStatus = p[i];
+        const chunkStatus = p[i]; // now stores grade string or 'review' or undefined
         const isActiveChunk = state.currentChunk &&
           state.currentChunk.lesson.id === l.id &&
           state.currentChunk.chunkIdx === i;
+        const isGraded = chunkStatus && chunkStatus !== 'review';
+        const isReview = chunkStatus === 'review';
         let pillClass = 'chunk-pill';
         if (isActiveChunk) pillClass += ' active';
-        if (chunkStatus === 'done') pillClass += ' done';
-        if (chunkStatus === 'review') pillClass += ' review';
+        if (isGraded) pillClass += ` grade-${chunkStatus}`;
+        if (isReview) pillClass += ' review';
         const startN = ch[0].n;
         const endN = ch[ch.length-1].n;
-        const pillLabel = chunkStatus === 'done' ? `✓ ${startN}–${endN}` : chunkStatus === 'review' ? `⚑ ${startN}–${endN}` : `${startN}–${endN}`;
+        const gradeIcon = chunkStatus === 'excellent' || chunkStatus === 'good' ? '✓' :
+                          chunkStatus === 'fair'      ? '·' :
+                          chunkStatus === 'poor'      ? '✗' :
+                          isReview                    ? '⚑' : '';
+        const pillLabel = gradeIcon ? `${gradeIcon} ${startN}–${endN}` : `${startN}–${endN}`;
         return `<button class="${pillClass}" onclick="event.stopPropagation();goToChunk(${l.id},${i})" title="Lines ${startN}–${endN}">${pillLabel}</button>`;
       }).join('');
       chunkPickerHTML = `<div class="chunk-picker">${pills}</div>`;
@@ -2075,12 +2089,20 @@ function showFeedback(feedback, lesson, chunkIdx) {
   const chunks = getChunks(lesson);
   const hasNext = chunkIdx < chunks.length - 1;
 
+  // Student's translation (saved before grading)
+  const studentHTML = state.savedTranslation
+    ? `<div class="feedback-section">
+        <h4>Your Translation</h4>
+        <div class="ideal-block" style="border-left-color:var(--slate-light);color:var(--slate)">${escHTML(state.savedTranslation)}</div>
+      </div>` : '';
+
   document.getElementById('mainArea').innerHTML = `
     <div class="feedback-card">
       <div class="feedback-header ${cls}">
         <span class="feedback-grade">${feedback.grade.toUpperCase()} — ${escHTML(feedback.summary)}</span>
       </div>
       <div class="feedback-body">
+        ${studentHTML}
         ${nailedHTML}
         ${correctionsHTML}
         <div class="feedback-section">
@@ -2088,7 +2110,7 @@ function showFeedback(feedback, lesson, chunkIdx) {
           <div class="ideal-block">${escHTML(idealFormatted)}</div>
         </div>
         <div class="feedback-actions">
-          <button class="btn-primary" onclick="advanceChunk(1)">${hasNext ? 'Next Chunk →' : 'Lesson Complete ✓'}</button>
+          <button class="btn-primary" onclick="advanceAndMark('${feedback.grade}', ${lesson.id}, ${chunkIdx})">${hasNext ? 'Next Chunk →' : 'Lesson Complete ✓'}</button>
           <button class="btn-secondary" onclick="markReview(${lesson.id},${chunkIdx}); advanceChunk(1)">${(state.progress[lesson.id]||{})[chunkIdx]==='review' ? '⚑ Unflag &amp; Continue' : '⚑ Flag &amp; Continue'}</button>
           <button class="btn-secondary" style="margin-left:auto" onclick="showQuiz(state.currentChunk.lesson, state.currentChunk.chunkIdx)">Retry</button>
         </div>
@@ -2096,10 +2118,13 @@ function showFeedback(feedback, lesson, chunkIdx) {
     </div>
   `;
 
-  // auto-mark done if grade is good/excellent
-  if (feedback.grade === 'excellent' || feedback.grade === 'good') {
-    markChunkStatus(lesson.id, chunkIdx, 'done');
-  }
+  // Mark with grade immediately (pill updates in sidebar)
+  markChunkStatus(lesson.id, chunkIdx, feedback.grade);
+}
+
+function advanceAndMark(grade, lessonId, chunkIdx) {
+  // Grade already marked in showFeedback, just advance
+  advanceChunk(1);
 }
 
 function advanceChunk(delta) {
