@@ -780,7 +780,7 @@ textarea::placeholder { color: var(--parchment-dark); font-style: italic; }
 <body>
 
 <!-- TOKEN MODAL -->
-<div class="modal-overlay" id="tokenModal">
+<div class="modal-overlay hidden" id="tokenModal">
   <div class="modal">
     <h2>API Key</h2>
     <p>Enter your Anthropic API key. It is stored only in your browser's localStorage and never sent anywhere except directly to api.anthropic.com.</p>
@@ -795,9 +795,9 @@ textarea::placeholder { color: var(--parchment-dark); font-style: italic; }
 <!-- HEADER -->
 <header>
   <span class="header-title">VERGIL · TRANSLATION DRILLS</span>
-  <div class="header-right">
+  <div class="header-right" id="headerRight">
     <span class="token-indicator" id="tokenIndicator"></span>
-    <button class="token-btn" onclick="openTokenModal()">API Key</button>
+    <button class="token-btn" id="apiKeyBtn" onclick="openTokenModal()">API Key</button>
   </div>
 </header>
 
@@ -836,7 +836,7 @@ textarea::placeholder { color: var(--parchment-dark); font-style: italic; }
       <p class="welcome-epigraph">Ītaliam fātō profugus Lāvīnaque vēnit</p>
       <p class="welcome-citation">— Aeneid 1.1–2</p>
       <p>Select a lesson from the table of contents, or choose a random section. Add your Anthropic API key to begin.</p>
-      <button class="btn-primary" onclick="openTokenModal()" style="font-size:13px;padding:10px 28px;">Set API Key →</button>
+      <button class="btn-primary" id="welcomeBtn" onclick="openTokenModal()" style="font-size:13px;padding:10px 28px;">Set API Key →</button>
     </div>
   </main>
 </div>
@@ -1619,16 +1619,23 @@ const BOOKS = [...new Set(LESSONS.map(l => l.book))];
 // STATE
 // ═══════════════════════════════════════════════════════
 
+// ── Proxy config ─────────────────────────────────────────────────────
+// Set PROXY_URL to your deployed Apps Script web app URL.
+// Leave as '' to use direct Anthropic API (requires API key in browser).
+const PROXY_URL    = 'https://script.google.com/macros/s/AKfycbxI7sCP7zAz80iPCkGbjaUrFicC4V1mCNczS_I-jIGNrthc41RBBT7Fq_CwStoX2DXT/exec';   // e.g. 'https://script.google.com/macros/s/ABC.../exec'
+const APP_SECRET   = 'vergil-2026';   // must match APP_SECRET Script Property in Apps Script
+// ─────────────────────────────────────────────────────────────────────
+
 let state = {
   apiKey: localStorage.getItem('vergil_api_key') || '',
-  // progress: { lessonId: { chunks: [{start, end, status}] } }
   progress: JSON.parse(localStorage.getItem('vergil_progress') || '{}'),
   activeBook: 6,
   activeLesson: null,
-  currentChunk: null, // {lessonId, lines: [{n,t}], overflowStart: null}
-  phase: 'idle', // idle | quiz | grading | feedback
+  currentChunk: null,
+  phase: 'idle',
   lastFeedback: null,
-  overflowLine: null, // a single line carried from prev chunk to provide context
+  overflowLine: null,
+  savedTranslation: '',
 };
 
 function saveProgress() {
@@ -1894,18 +1901,23 @@ function showQuiz(lesson, chunkIdx) {
 // ═══════════════════════════════════════════════════════
 
 async function submitTranslation() {
-  if (!state.apiKey) { openTokenModal(); return; }
   const input = document.getElementById('translationInput');
   const userTranslation = input ? input.value.trim() : '';
   if (!userTranslation) return;
 
-  if (window.location.protocol === 'file:') {
+  const usingProxy = PROXY_URL && APP_SECRET;
+
+  // Direct mode requires API key
+  if (!usingProxy && !state.apiKey) { openTokenModal(); return; }
+
+  // file:// only works with proxy (no CORS issue) or blocks direct
+  if (!usingProxy && window.location.protocol === 'file:') {
     document.getElementById('mainArea').innerHTML = `
       <div class="loading-card">
         <div class="loading-text" style="color:var(--rust)">Cannot call API from file://</div>
         <p style="font-size:14px;color:var(--slate);margin-top:1rem;line-height:1.7">
-          Serve with: <code>python3 -m http.server 8080</code><br>
-          then open <code>http://localhost:8080/vergil_quiz.html</code>
+          Either set PROXY_URL in the HTML, or serve with:<br>
+          <code>python3 -m http.server 8080</code>
         </p>
       </div>`;
     return;
@@ -1917,13 +1929,46 @@ async function submitTranslation() {
   showLoading('Grading your translation\u2026');
 
   const latinText = chunk.map(l => `${l.n}: ${l.t}`).join('\n');
-  const contextNote = overflowLine ? `Note: sentence continues from previous line: "${overflowLine.t}"` : '';
+  const contextNote = overflowLine
+    ? `sentence continues from previous line: "${overflowLine.t}"`
+    : '';
 
-  const gradingPrompt = `You are a Latin teacher grading a student translation of Vergil's Aeneid. Be concise and precise.
+  let rawResponse = '';
+  try {
+    let feedback;
+
+    if (usingProxy) {
+      // ── Proxy path ───────────────────────────────────────────────
+      // Send as text/plain to avoid CORS preflight (Apps Script limitation)
+      // GAS parses the body as JSON on its end
+      const res = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow',
+        body: JSON.stringify({
+          secret: APP_SECRET,
+          latinLines: latinText,
+          userTranslation,
+          contextNote,
+        })
+      });
+
+      if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
+      const data = await res.json();
+
+      // Apps Script embeds status in body (can't set HTTP status codes)
+      if (data.status !== 200) {
+        throw new Error(data.error || `Proxy error ${data.status}`);
+      }
+      feedback = data.feedback;
+
+    } else {
+      // ── Direct path (key in browser) ─────────────────────────────
+      const gradingPrompt = `You are a Latin teacher grading a student translation of Vergil's Aeneid. Be concise and precise.
 
 Latin lines:
 ${latinText}
-${contextNote}
+${contextNote ? 'Note: ' + contextNote : ''}
 
 Student translation:
 ${userTranslation}
@@ -1939,46 +1984,40 @@ Required fields exactly:
 }
 grade must be one of: excellent good fair poor`;
 
-  let rawResponse = '';
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': state.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 1000,
-        messages: [
-          { role: 'user', content: gradingPrompt },
-          { role: 'assistant', content: '{' }
-        ]
-      })
-    });
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': state.apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 1000,
+          messages: [
+            { role: 'user', content: gradingPrompt },
+            { role: 'assistant', content: '{' }
+          ]
+        })
+      });
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error?.message || `HTTP ${res.status}`);
-    }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `HTTP ${res.status}`);
+      }
 
-    const data = await res.json();
-    rawResponse = data.content.map(b => b.text || '').join('');
+      const data = await res.json();
+      rawResponse = data.content.map(b => b.text || '').join('');
+      let fullJSON = '{' + rawResponse;
+      fullJSON = fullJSON.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
 
-    // Reconstruct full JSON (prefill gave us the opening '{')
-    let fullJSON = '{' + rawResponse;
-    // Strip any accidental markdown fences
-    fullJSON = fullJSON.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
-
-    let feedback;
-    try {
-      feedback = JSON.parse(fullJSON);
-    } catch(e1) {
-      // Try trimming to last valid }
-      const lastBrace = fullJSON.lastIndexOf('}');
-      feedback = JSON.parse(fullJSON.slice(0, lastBrace + 1));
+      try {
+        feedback = JSON.parse(fullJSON);
+      } catch (_) {
+        const lastBrace = fullJSON.lastIndexOf('}');
+        feedback = JSON.parse(fullJSON.slice(0, lastBrace + 1));
+      }
     }
 
     if (!feedback.grade) throw new Error('Missing grade field in response');
@@ -2262,14 +2301,23 @@ function parseDictResponse(json, query) {
 // INIT
 // ═══════════════════════════════════════════════════════
 
-updateTokenIndicator();
+// Configure header based on proxy vs direct mode
+// Always ensure modal is hidden on load (it has no hidden class by default)
+document.getElementById('tokenModal').classList.add('hidden');
+
+if (PROXY_URL && APP_SECRET) {
+  const btn = document.getElementById('apiKeyBtn');
+  const ind = document.getElementById('tokenIndicator');
+  const wBtn = document.getElementById('welcomeBtn');
+  if (btn) { btn.textContent = 'Proxy ✓'; btn.style.borderColor = 'var(--sage-light)'; btn.style.color = 'var(--sage-light)'; btn.onclick = null; btn.style.cursor = 'default'; }
+  if (ind) { ind.className = 'token-indicator ok'; }
+  if (wBtn) { wBtn.textContent = 'Ready →'; wBtn.onclick = null; wBtn.style.cursor = 'default'; }
+} else {
+  updateTokenIndicator();
+  if (!state.apiKey) setTimeout(openTokenModal, 600);
+}
 renderBookTabs();
 renderTOC();
-
-// Show token modal on first load if no key
-if (!state.apiKey) {
-  setTimeout(openTokenModal, 600);
-}
 </script>
 </body>
 </html>
