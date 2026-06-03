@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vergil · Translation Drills</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Cinzel:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1410;
+  --parchment: #f5efe4;
+  --parchment-mid: #ede4d3;
+  --parchment-dark: #d4c9b0;
+  --rust: #8b3a1e;
+  --rust-light: #b04d2a;
+  --gold: #c9922a;
+  --gold-light: #e8b84b;
+  --sage: #4a6741;
+  --sage-light: #6a9464;
+  --slate: #3d4a5c;
+  --slate-light: #5a6a80;
+  --cream: #faf6ee;
+  --shadow: rgba(26,20,16,0.12);
+  --shadow-deep: rgba(26,20,16,0.25);
+  --border: rgba(26,20,16,0.15);
+  --border-strong: rgba(26,20,16,0.3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'EB Garamond', Georgia, serif;
+  background: var(--parchment);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--ink);
+  color: var(--parchment);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  border-bottom: 3px solid var(--gold);
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--gold-light);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.token-btn {
+  font-family: 'EB Garamond', serif;
+  font-size: 14px;
+  padding: 5px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold-light);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.token-btn:hover { background: var(--gold); color: var(--ink); }
+
+.token-indicator {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #888;
+  display: inline-block;
+}
+.token-indicator.ok { background: var(--sage-light); }
+
+/* ── LAYOUT ── */
+.app {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: calc(100vh - 56px);
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--cream);
+  border-right: 1px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 1rem 1.2rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sidebar-header h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--slate-light);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+.book-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.book-tab {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--slate);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.05em;
+}
+.book-tab:hover { background: var(--parchment-dark); }
+.book-tab.active { background: var(--ink); color: var(--gold-light); border-color: var(--ink); }
+
+.toc-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.toc-lesson-group {
+  display: block;
+}
+
+.toc-lesson {
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+.toc-lesson:hover { background: var(--parchment-mid); }
+.toc-lesson.active { background: var(--parchment-mid); border-left-color: var(--gold); }
+
+.toc-status {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.toc-status.done { background: var(--sage); border-color: var(--sage); }
+.toc-status.review { background: var(--gold); border-color: var(--gold); }
+.toc-status.partial { background: var(--parchment-dark); border-color: var(--slate-light); }
+
+.toc-info { flex: 1; min-width: 0; }
+.toc-lesson-num {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: var(--slate-light);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.toc-lines {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toc-progress {
+  font-size: 11px;
+  color: var(--slate-light);
+  margin-top: 2px;
+}
+
+.sidebar-footer {
+  padding: 0.75rem 1.2rem;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.random-btn {
+  width: 100%;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 8px;
+  border-radius: 3px;
+  border: 1px solid var(--rust);
+  background: transparent;
+  color: var(--rust);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.random-btn:hover { background: var(--rust); color: var(--cream); }
+
+/* ── MAIN AREA ── */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  gap: 1.5rem;
+}
+
+/* ── TOKEN MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,20,16,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.hidden { display: none; }
+
+.modal {
+  background: var(--cream);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 2rem;
+  width: 440px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px var(--shadow-deep);
+}
+
+.modal h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+  color: var(--ink);
+}
+
+.modal p {
+  font-size: 14px;
+  color: var(--slate);
+  margin-bottom: 1.2rem;
+  line-height: 1.6;
+}
+
+.modal input {
+  width: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--ink);
+  margin-bottom: 1rem;
+}
+.modal input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+.modal-btns { display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+.btn-primary {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  padding: 8px 20px;
+  border-radius: 3px;
+  border: none;
+  background: var(--ink);
+  color: var(--gold-light);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary:hover { background: var(--rust); }
+
+.btn-secondary {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  padding: 8px 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--slate);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary:hover { background: var(--parchment-mid); }
+
+/* ── QUIZ CARD ── */
+.quiz-card {
+  width: 100%;
+  max-width: 760px;
+  background: var(--cream);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 4px 20px var(--shadow);
+  overflow: hidden;
+}
+
+.quiz-card-header {
+  background: var(--ink);
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quiz-card-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--gold-light);
+}
+
+.quiz-card-meta {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--parchment-dark);
+}
+
+.quiz-card-body { padding: 1.5rem; }
+
+.latin-lines {
+  background: var(--parchment);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.latin-line {
+  display: flex;
+  gap: 1.2rem;
+  align-items: baseline;
+  line-height: 2.2;
+}
+
+.line-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--slate-light);
+  min-width: 2rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.line-text {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+
+.overflow-note {
+  font-size: 13px;
+  color: var(--slate-light);
+  font-style: italic;
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--gold);
+}
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  font-family: 'EB Garamond', serif;
+  font-size: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--parchment);
+  color: var(--ink);
+  resize: vertical;
+  line-height: 1.7;
+  transition: border-color 0.2s;
+}
+textarea:focus { outline: none; border-color: var(--gold); }
+textarea::placeholder { color: var(--parchment-dark); font-style: italic; }
+
+.quiz-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  align-items: center;
+}
+
+.submit-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding: 9px 22px;
+  border-radius: 3px;
+  border: none;
+  background: var(--ink);
+  color: var(--gold-light);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.submit-btn:hover:not(:disabled) { background: var(--rust); }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.mark-review-btn {
+  font-family: 'EB Garamond', serif;
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mark-review-btn:hover { background: var(--gold); color: var(--ink); }
+
+.skip-btn {
+  font-family: 'EB Garamond', serif;
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--slate-light);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+.skip-btn:hover { background: var(--parchment-mid); }
+
+/* ── FEEDBACK CARD ── */
+.feedback-card {
+  width: 100%;
+  max-width: 760px;
+  background: var(--cream);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 4px 20px var(--shadow);
+  overflow: hidden;
+}
+
+.feedback-header {
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.feedback-header.excellent { background: #2a4a2a; }
+.feedback-header.good { background: #3a4a2a; }
+.feedback-header.fair { background: #4a3a18; }
+.feedback-header.poor { background: #4a2018; }
+
+.feedback-grade {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--gold-light);
+  text-transform: uppercase;
+}
+
+.feedback-body { padding: 1.5rem; }
+
+.feedback-section {
+  margin-bottom: 1.2rem;
+}
+
+.feedback-section h4 {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate-light);
+  margin-bottom: 0.5rem;
+}
+
+.feedback-section p, .feedback-section li {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.feedback-section ul {
+  padding-left: 1.2rem;
+}
+
+.ideal-block {
+  background: var(--parchment);
+  border-left: 3px solid var(--sage);
+  padding: 0.85rem 1rem;
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.9;
+  white-space: pre-line;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ── LOADING STATE ── */
+.loading-card {
+  width: 100%;
+  max-width: 760px;
+  background: var(--cream);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 4px 20px var(--shadow);
+}
+
+.loading-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border-strong);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--slate-light);
+}
+
+/* ── WELCOME CARD ── */
+.welcome-card {
+  width: 100%;
+  max-width: 760px;
+  background: var(--cream);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 4px 20px var(--shadow);
+}
+
+.welcome-card h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+}
+
+.welcome-card p {
+  font-size: 16px;
+  color: var(--slate);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.welcome-epigraph {
+  font-style: italic;
+  font-size: 18px;
+  color: var(--rust);
+  margin-bottom: 0.3rem;
+}
+
+.welcome-citation {
+  font-size: 13px;
+  color: var(--slate-light);
+  margin-bottom: 2rem !important;
+}
+
+/* ── ERROR ── */
+.error-banner {
+  background: #4a1a0a;
+  color: #f5c5a0;
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  max-width: 760px;
+  display: none;
+}
+.error-banner.visible { display: block; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--parchment-dark); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--slate-light); }
+
+/* ── CHUNK PICKER (expands under active lesson) ── */
+.chunk-picker {
+  background: var(--parchment);
+  border-top: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  padding: 0.4rem 0.75rem 0.5rem 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.chunk-pill {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border-strong);
+  background: var(--cream);
+  color: var(--slate);
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.chunk-pill:hover { background: var(--parchment-dark); }
+.chunk-pill.active { background: var(--ink); color: var(--gold-light); border-color: var(--ink); }
+.chunk-pill.done { border-color: var(--sage); color: var(--sage); }
+.chunk-pill.review { border-color: var(--gold); color: var(--gold); }
+.chunk-pill.done.active, .chunk-pill.review.active { background: var(--ink); color: var(--gold-light); border-color: var(--ink); }
+
+/* ── DICTIONARY PANEL ── */
+.dict-panel {
+  border-top: 1px solid var(--border-strong);
+  background: var(--cream);
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+  max-height: 0;
+}
+.dict-panel.open { max-height: 340px; }
+
+.dict-toggle {
+  width: 100%;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 1.2rem;
+  border: none;
+  border-top: 1px solid var(--border-strong);
+  background: var(--parchment-mid);
+  color: var(--slate);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.dict-toggle:hover { background: var(--parchment-dark); }
+.dict-toggle-arrow { transition: transform 0.2s; display: inline-block; }
+.dict-toggle-arrow.open { transform: rotate(180deg); }
+
+.dict-inner {
+  padding: 0.6rem 1rem 0.8rem;
+  overflow-y: auto;
+  max-height: 290px;
+}
+
+.dict-search-row {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 0.7rem;
+}
+.dict-input {
+  flex: 1;
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 14px;
+  padding: 6px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--parchment);
+  color: var(--ink);
+  min-width: 0;
+}
+.dict-input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+.dict-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 6px 10px;
+  border-radius: 3px;
+  border: none;
+  background: var(--ink);
+  color: var(--gold-light);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.dict-btn:hover { background: var(--rust); }
+.dict-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.dict-results { font-size: 13px; }
+
+.dict-entry {
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.dict-entry:last-child { border-bottom: none; margin-bottom: 0; }
+
+.dict-headword {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.dict-pos {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin-bottom: 4px;
+}
+.dict-forms {
+  color: var(--slate);
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+.dict-meaning {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.dict-meaning-label {
+  font-weight: 600;
+  color: var(--slate);
+}
+.dict-no-results {
+  color: var(--slate-light);
+  font-style: italic;
+  font-size: 13px;
+  padding: 0.5rem 0;
+}
+.dict-loading {
+  color: var(--slate-light);
+  font-style: italic;
+  font-size: 13px;
+  padding: 0.5rem 0;
+}
+.dict-error {
+  color: var(--rust);
+  font-size: 13px;
+  padding: 0.5rem 0;
+}
+
+</style>
+</head>
+<body>
+
+<!-- TOKEN MODAL -->
+<div class="modal-overlay" id="tokenModal">
+  <div class="modal">
+    <h2>API Key</h2>
+    <p>Enter your Anthropic API key. It is stored only in your browser's localStorage and never sent anywhere except directly to api.anthropic.com.</p>
+    <input type="password" id="tokenInput" placeholder="sk-ant-..." autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeTokenModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveToken()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <span class="header-title">VERGIL · TRANSLATION DRILLS</span>
+  <div class="header-right">
+    <span class="token-indicator" id="tokenIndicator"></span>
+    <button class="token-btn" onclick="openTokenModal()">API Key</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h3>Book</h3>
+      <div class="book-tabs" id="bookTabs"></div>
+    </div>
+    <div class="toc-scroll" id="tocScroll"></div>
+    <div class="sidebar-footer">
+      <button class="random-btn" onclick="startRandom()">⚄ Random Section</button>
+    </div>
+    <!-- Dictionary toggle button sits outside the panel so it's always visible -->
+    <button class="dict-toggle" id="dictToggle" onclick="toggleDict()">
+      <span>Lexicon</span>
+      <span class="dict-toggle-arrow" id="dictArrow">▾</span>
+    </button>
+    <div class="dict-panel" id="dictPanel">
+      <div class="dict-inner">
+        <div class="dict-search-row">
+          <input class="dict-input" id="dictInput" type="text" placeholder="quaerere…"
+            onkeydown="if(event.key==='Enter') lookupWord()">
+          <button class="dict-btn" id="dictSearchBtn" onclick="lookupWord()">Look up</button>
+        </div>
+        <div class="dict-results" id="dictResults"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" id="mainArea">
+    <div class="welcome-card">
+      <h2>Arma virumque canō</h2>
+      <p class="welcome-epigraph">Ītaliam fātō profugus Lāvīnaque vēnit</p>
+      <p class="welcome-citation">— Aeneid 1.1–2</p>
+      <p>Select a lesson from the table of contents, or choose a random section. Add your Anthropic API key to begin.</p>
+      <button class="btn-primary" onclick="openTokenModal()" style="font-size:13px;padding:10px 28px;">Set API Key →</button>
+    </div>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA — all 52 lessons structured
+// ═══════════════════════════════════════════════════════
+
+const LESSONS = [
+  // BOOK 1
+  {id:1, book:1, title:"Invocation of the Muse", lines:[
+    {n:1,t:"Arma virumque canō, Troiae quī prīmus ab ōrīs"},
+    {n:2,t:"Ītaliam fātō profugus Lāvīnaque vēnit"},
+    {n:3,t:"lītora—multum ille et terrīs iactātus et altō"},
+    {n:4,t:"vī superum, saevae memorem Iūnōnis ob īram,"},
+    {n:5,t:"multa quoque et bellō passus, dum conderet urbe"},
+    {n:6,t:"īnferretque deōs Latiō—genus unde Latīnum"},
+    {n:7,t:"Albānīque patrēs atque altae moenia Rōmae."},
+    {n:8,t:"Mūsa, mihī causās memorā, quō nūmine laesō"},
+    {n:9,t:"quidve dolēns rēgīna deum tot volvere cāsūs"},
+    {n:10,t:"insignem pietāte virum, tot adīre labōrās"},
+    {n:11,t:"impulerit. Tantaene animīs caelestibus īrae?"},
+  ]},
+  {id:2, book:1, title:"Reasons for Juno's Anger I", lines:[
+    {n:12,t:"Urbs antīqua fuit (Tyriī tenuēre colōnī)"},
+    {n:13,t:"Karthāgō, Ītaliam contrā Tiberīnaque longē"},
+    {n:14,t:"ōstia, dīves opum studiīsque asperrima bellī;"},
+    {n:15,t:"quam Iūnō fertur terrīs magis omnibus ūnam"},
+    {n:16,t:"posthabitā coluisse Samō: hīc illius arma,"},
+    {n:17,t:"hīc currus fuit; hoc rēgnum dea gentibus esse,"},
+    {n:18,t:"sī quā fāta sinant, iam tum tenditque fovetque."},
+    {n:19,t:"Prōgeniem sed enim Troiānō ā sanguine dūcī"},
+    {n:20,t:"audierat Tyriās ōlim quae verteret arcēs;"},
+    {n:21,t:"hinc populum lātē rēgem bellōque superbum"},
+    {n:22,t:"ventūrum excidiō Libyae: sīc volvere Parcās"},
+  ]},
+  {id:3, book:1, title:"Reasons for Juno's Anger II", lines:[
+    {n:23,t:"Id metuēns veterisque memor Sāturnia bellī,"},
+    {n:24,t:"prīma quod ad Troiam prō cārīs gesserat Argīs"},
+    {n:25,t:"(necdum etiam causae īrārum saevīque dolōrēs"},
+    {n:26,t:"exciderant animō; manet altā mente repostum"},
+    {n:27,t:"iūdicium Paridis sprētaeque iniūria formae"},
+    {n:28,t:"et genus invīsum et raptī Ganymēdis honōrēs)"},
+    {n:29,t:"hīs accēnsa super iactātōs aequore tōtō"},
+    {n:30,t:"Trōās, relliquiās Danaum atque immītis Achillī,"},
+    {n:31,t:"arcēbat longē Latiō, multōsque per annōs"},
+    {n:32,t:"errābant āctī fātīs maria omnia circum."},
+    {n:33,t:"Tantae mōlis erat Rōmānam condere gentem."},
+  ]},
+  {id:4, book:1, title:"Juno Visits Aeolus", lines:[
+    {n:50,t:"Tālia flammātō sēcum dea corde volūtāns"},
+    {n:51,t:"nimbōrum in patriam, loca fēta furentibus Austrīs,"},
+    {n:52,t:"Aeoliam venit. Hīc vastō rēx Aeolus antrō"},
+    {n:53,t:"luctantēs ventōs tempestātēsque sonōrās"},
+    {n:54,t:"imperiō premit ac vinclīs et carcere frēnat."},
+    {n:55,t:"Illī indignantēs magnō cum murmure montis"},
+    {n:56,t:"circum claustra fremunt; celsā sedet Aeolus arce"},
+    {n:57,t:"scēptra tenēns mollitque animōs et temperat īrās;"},
+    {n:58,t:"nī faciat, maria ac terrās caelumque profundum"},
+    {n:59,t:"quippe ferant rapidī sēcum verrantque per aurās."},
+    {n:60,t:"Sed pater omnipotēns spēluncīs abdidit ātrīs"},
+    {n:61,t:"Hoc metuēns mōlemque et montēs īnsuper altōs"},
+    {n:62,t:"imposuit rēgemque dedit quī foedere certō"},
+    {n:63,t:"et premere et laxās scīret dare iussus habēnās."},
+  ]},
+  {id:5, book:1, title:"Juno Asks Aeolus to Destroy the Trojans", lines:[
+    {n:64,t:"Ad quem tum Jūnō supplex hīs vōcibus ūsa est:"},
+    {n:65,t:'"Aeole, namque tibī dīvum pater atque hominum rēx'},
+    {n:66,t:"et mulcēre dedit flūctūs et tollere ventō,"},
+    {n:67,t:"gēns inimīca mihī Tyrrhēnum nāvigat aequor"},
+    {n:68,t:"Īlium in Ītaliam portāns victōsque Penātēs:"},
+    {n:69,t:"incute vim ventīs summersāsque obrue puppēs,"},
+    {n:70,t:"aut age dīversōs et disiice corpora pontō."},
+    {n:71,t:"Sunt mihi bis septem praestantī corpore nymphae,"},
+    {n:72,t:"quārum quae formā pulcherrima, Dēiopēa,"},
+    {n:73,t:"cōnūbiō iungam stabilī propriamque dicābō,"},
+    {n:74,t:"omnēs ut tēcum meritīs prō tālibus annōs"},
+    {n:75,t:'exigat et pulchrā faciat tē prōle parentem."'},
+  ]},
+  {id:6, book:1, title:"Aeneas Prays for Death", lines:[
+    {n:88,t:"Ēripiunt subitō nūbēs caelumque diemque"},
+    {n:89,t:"Teucōrum ex oculīs; pontō nox incubat ātra."},
+    {n:90,t:"Īntonuēre polī et crēbrīs micat ignibus aethēr"},
+    {n:91,t:"praesentemque virīs intentant omnia mortem."},
+    {n:92,t:"Extemplō Aenēae solvuntur frīgore membra;"},
+    {n:93,t:"Ingemit et duplicēs tendēns ad sīdera palmās"},
+    {n:94,t:'tālia vōce refert: "Ō terque quarterque beātī,'},
+    {n:95,t:"quīs ante ōra patrum Troiae sub moenibus altīs"},
+    {n:96,t:"contigit oppetere! Ō Danaum fortissime gentis"},
+    {n:97,t:"Tȳdīdē! mēne Īliacīs occumbere campīs"},
+    {n:98,t:"nōn potuisse tuāque animam hanc effundere dextrā"},
+    {n:99,t:"saevus ubi Aeacidae tēlō iacet Hector, ubi ingēns"},
+    {n:100,t:"Sarpēdon, ubi tot Simoīs correpta sub undīs"},
+    {n:101,t:'scūta virum galeāsque et fortia corpora volvit!"'},
+  ]},
+  {id:7, book:1, title:"The Trojans Suffer; Neptune Notices", lines:[
+    {n:102,t:"Tālia iactantī strīdēns Aquilōne procella"},
+    {n:103,t:"vēlum adversa ferit, flūctūsque ad sīdera tollit."},
+    {n:104,t:"Franguntur rēmī, tum prōra āvertit et undīs"},
+    {n:105,t:"dat latus, īnsequitur cumulō praeruptus aquae mōns"},
+    {n:106,t:"Hī summō in flūctū pendent; hīs unda dehīscēns"},
+    {n:107,t:"terram inter flūctūs aperit, furit aestus harēnis."},
+    {n:128,t:"Disiectam Aenēae tōtō videt aequore classem,"},
+    {n:129,t:"flūctibus oppressōs Trōas caelīque ruīnā."},
+    {n:130,t:"Nec latuēre dolī frātrem Iūnōnis et īrae."},
+    {n:131,t:"Eurum ad sē Zephyrumque vocat, dehinc tālia fātur:"},
+  ]},
+  {id:8, book:1, title:"Neptune Addresses the Winds", lines:[
+    {n:132,t:'"Tantane vōs generis tenuit fīdūcia vestrī?'},
+    {n:133,t:"Iam caelum terramque meō sine nūmine, ventī,"},
+    {n:134,t:"miscēre et tantās audētis tollere mōlēs?"},
+    {n:135,t:"Quōs ego—! sed mōtōs praestat compōnere flūctūs."},
+    {n:136,t:"Post mihi nōn similī poenā commissa luētis."},
+    {n:137,t:"Mātūrāte fugam rēgīque haec dīcite vestrō:"},
+    {n:138,t:"nōn illī imperium pelagī saevumque tridentem,"},
+    {n:139,t:"sed mihi sorte datum. Tenet ille immānia saxa,"},
+    {n:140,t:"vestrās, Eure, domōs; illā sē iactet in aulā"},
+    {n:141,t:'Aeolus et clausō ventōrum carcere rēgnet."'},
+  ]},
+  {id:9, book:1, title:"Simile of the Pious Orator; Jupiter's Prophecy I", lines:[
+    {n:148,t:"Ac velutī magnō in populō cum saepe coörta est"},
+    {n:149,t:"sēditiō saevitque animīs ignōbile vulgus;"},
+    {n:150,t:"iamque facēs et saxa volant, furor arma ministrat;"},
+    {n:151,t:"tum, pietāte gravem ac meritīs sī forte virum quem"},
+    {n:152,t:"cōnspexēre, silent arrēctīsque auribus astant;"},
+    {n:153,t:"ille regit dictīs animōs et pectora mulcet:"},
+    {n:154,t:"sīc cūnctus pelagī cecidit fragor, aequora postquam"},
+    {n:254,t:"Ollī subrīdēns hominum sator atque deōrum,"},
+    {n:255,t:"vultū, quō caelum tempestātēsque serēnat,"},
+    {n:256,t:"ōscula lībāvit nātae, dehinc tālia fātur:"},
+    {n:257,t:'"Parce metū, Cytherēa, manent immōta tuōrum'},
+    {n:258,t:"fāta tibi; cernēs urbem et prōmissa Lāvīnī"},
+    {n:259,t:"moenia sublīmemque ferēs ad sīdera caelī"},
+    {n:260,t:'magnanimum Aenēān; neque mē sententia vertit.'},
+  ]},
+  {id:10, book:1, title:"Jupiter's Prophecy II", lines:[
+    {n:261,t:"Hic tibi (fābor enim, quandō haec tē cūra remordet,"},
+    {n:262,t:"longius et volvēns fātōrum arcāna movēbō)"},
+    {n:263,t:"bellum ingēns geret Ītaliā populōsque ferōcēs"},
+    {n:264,t:"contundet mōrēsque virīs et moenia pōnet,"},
+    {n:265,t:"tertia dum Latiō rēgnantem vīderit aestās,"},
+    {n:266,t:"ternaque trānsierint Rutulīs hīberna subāctīs."},
+    {n:267,t:"At puer Ascanius, cui nunc cognōmen Iūlō"},
+    {n:268,t:"additur (Īlus erat, dum rēs stetit Īlia rēgnō),"},
+    {n:269,t:"trīgintā magnōs volvendīs mēnsibus orbēs"},
+    {n:270,t:"imperiō explēbit, rēgnumque ab sēde Lāvīnī"},
+    {n:271,t:"trānsferet, et Longam multā vī mūniet Albam."},
+    {n:272,t:"Hīc iam ter centum tōtōs rēgnābitur annōs"},
+    {n:273,t:"gente sub Hectoreā, dōnec rēgīna sacerdōs"},
+    {n:274,t:"Mārte gravis geminam partū dabit Īlia prōlem."},
+  ]},
+  {id:11, book:1, title:"Jupiter's Prophecy III", lines:[
+    {n:275,t:"Inde lupae fulvō nūtrīcis tegmine laetus"},
+    {n:276,t:"Rōmulus excipiet gentem et Māvortia condet"},
+    {n:277,t:"moenia Rōmānōsque suō dē nōmine dīcet."},
+    {n:278,t:"Hīs ego nec mētās rērum nec tempora pōnō:"},
+    {n:279,t:"imperium sine fīne dedī. Quīn aspera Iūnō"},
+    {n:280,t:"quae mare nunc terrāsque metū caelumque fatīgat,"},
+    {n:281,t:"cōnsilia in melius referet, mēcumque fovēbit"},
+    {n:282,t:"Rōmānōs, rērum dominōs gentemque togātam."},
+    {n:283,t:"Sīc placitum. Veniet lustrīs lābentibus aetās"},
+    {n:284,t:"cum domus Assaracī Phthīam clārāsque Mycēnās"},
+    {n:285,t:"servitiō premet ac victīs dominābitur Argīs."},
+    {n:286,t:"Nāscētur pulchrā Troiānus orīgine Caesar,"},
+    {n:287,t:"imperium Ōceanō, fāmam quī terminet astrīs,"},
+    {n:288,t:"Iūlius, ā magnō dēmissum nōmen Iūlō."},
+    {n:289,t:"Hunc tū ōlim caelō spoliīs Orientis onustum"},
+    {n:290,t:"accipiēs sēcūra; vocābitur hic quoque vōtīs."},
+  ]},
+  {id:12, book:1, title:"Jupiter's Prophecy IV; Dido Like Diana", lines:[
+    {n:291,t:"Aspera tum positīs mītēscent saecula bellīs;"},
+    {n:292,t:"Cāna Fidēs et Vesta, Remō cum frātre Quirīnus"},
+    {n:293,t:"ūra dabunt; dīrae ferrō et compāgibus artīs"},
+    {n:294,t:"claudentur Bellī portae; Furor impius intus"},
+    {n:295,t:"saeva sedēns super arma et centum vīnctus aēnīs"},
+    {n:296,t:'post tergum nōdīs fremet horridus ōre cruentō."'},
+    {n:496,t:"rēgīna ad templum, formā pulcherrima Dīdō,"},
+    {n:497,t:"incessit magnā iuvenum stīpante catervā."},
+    {n:498,t:"Quālis in Eurōtae rīpīs aut per iuga Cynthī"},
+    {n:499,t:"exercet Dīāna chorōs, quam mīlle secūtae"},
+    {n:500,t:"hinc atque hinc glomerantur Orēades; illa pharetram"},
+    {n:501,t:"fert umerō gradiēnsque deās superēminet omnēs"},
+    {n:502,t:"(Lātōnae tacitum pertemptant gaudia pectus):"},
+  ]},
+  {id:13, book:1, title:"Dido Rules the Carthaginians", lines:[
+    {n:503,t:"tālis erat Dīdō, tālem sē laeta ferēbat"},
+    {n:504,t:"per mediōs īnstāns operī rēgnīsque futūrīs."},
+    {n:505,t:"Tum foribus dīvae, mediā testūdine templī,"},
+    {n:506,t:"saepta armīs soliōque altē subnixa resēdit."},
+    {n:507,t:"Iūra dabat lēgēsque virīs, operumque labōrem"},
+    {n:508,t:"partibus aequābat iūstīs aut sorte trahēbat:"},
+    {n:509,t:"cum subitō Aenēās consursū accēdere magnō"},
+    {n:510,t:"Anthea Sergestumque videt fortemque Cloanthum"},
+    {n:511,t:"Teucōrumque aliōs, āter quōs aequore turbō"},
+    {n:512,t:"dispulerat penitusque aliās āvēxerat ōrās."},
+  ]},
+  // BOOK 2
+  {id:14, book:2, title:"Laocoön Advises Destroying the Horse", lines:[
+    {n:40,t:"Prīmus ibi ante omnēs magnā comitante catervā"},
+    {n:41,t:"Lāocoōn ardēns summā dēcurrit ab arce,"},
+    {n:42,t:'et procul: "Ō miserī, quae tanta īnsānia, cīvēs?'},
+    {n:43,t:"Crēditis āvectōs hostēs? Aut ūlla putātis"},
+    {n:44,t:"Dōna carēre dolīs Danaum? Sīc nōtus Ulixēs?"},
+    {n:45,t:"Aut hōc inclūsī lignō occultantur Achīvī,"},
+    {n:46,t:"Aut haec in nostrōs fabricāta est māchina mūrōs,"},
+    {n:47,t:"īnspectūra domōs ventūraque dēsuper urbī,"},
+    {n:48,t:'aut aliquis latet error; equō nē crēdite, Teucrī.'},
+    {n:49,t:'Quidquid id est, timeō Danaōs et dōna ferentēs."'},
+    {n:50,t:"Sīc fātus validīs ingentem vīribus hastam"},
+    {n:51,t:"in latus inque ferī curvam compāgibus alvum"},
+    {n:52,t:"contorsit. Stetit illa tremēns, uterōque recussō"},
+    {n:53,t:"īnsonuēre cavae gemitumque dedēre cavernae."},
+  ]},
+  {id:15, book:2, title:"Laocoön Throws a Spear; Serpents Approach", lines:[
+    {n:54,t:"Et, sī fāta deum, sī mēns nōn laeva fuisset,"},
+    {n:55,t:"impulerat ferrō Argolicās foedāre latebrās,"},
+    {n:56,t:"Troiaque nunc stāret, Priamīque arx alta manērēs."},
+    {n:201,t:"Lāocoōn, ductus Neptūnō sorte sacerdōs,"},
+    {n:202,t:"sollemnēs taurum ingentem mactābat ad ārās."},
+    {n:203,t:"Ecce autem geminī ā Tenedō tranquilla per alta"},
+    {n:204,t:"(horrēscō referēns) immēnsīs orbibus anguēs"},
+    {n:205,t:"incumbunt pelagō pariterque ad lītora tendunt;"},
+    {n:206,t:"pectora quōrum inter flūctūs arrēcta iubaeque"},
+    {n:207,t:"sanguineae superant undās; pars cētera pontum"},
+    {n:208,t:"pōne legit sinuatque immēnsa volūmine terga."},
+    {n:209,t:"Fit sonitus spūmante salō; iamque arva tenēbant"},
+    {n:210,t:"ardentēs oculōs suffectī sanguine et ignī"},
+    {n:211,t:"sībila lambēbant linguīs vibrantibus ōra."},
+  ]},
+  {id:16, book:2, title:"Serpents Attack Laocoön", lines:[
+    {n:212,t:"Diffugimus vīsū exsanguēs. Illī agmine certō"},
+    {n:213,t:"Lāocoönta petunt; et prīmum parva duōrum"},
+    {n:214,t:"corpora nātōrum serpēns amplexus uterque"},
+    {n:215,t:"implicat et miserōs morsū dēpascitur artūs;"},
+    {n:216,t:"post ipsum auxiliō subeuntem ac tēla ferentem"},
+    {n:217,t:"corripiunt spīrīsque ligant ingentibus; et iam"},
+    {n:218,t:"bis medium amplexī, bis collō squāmea circum"},
+    {n:219,t:"terga datī superant capite et cervīcibus altīs."},
+    {n:220,t:"Ille simul manibus tendit dīvellere nōdōs"},
+    {n:221,t:"perfūsus saniē vittās ātrōque venēnō,"},
+    {n:222,t:"clāmōrēs simul horrendōs ad sīdera tollit:"},
+    {n:223,t:"quālis mūgitus, fūgit cum saucius āram"},
+    {n:224,t:"taurus et incertam excussit cervīce secūrim."},
+  ]},
+  {id:17, book:2, title:"Serpents Escape; Horse Pulled into City", lines:[
+    {n:225,t:"At geminī lāpsū dēlūbra ad summa dracōnēs"},
+    {n:226,t:"effugiunt saevaeque petunt Trītonidis arcem"},
+    {n:227,t:"sub pedibusque deae clipeīque sub orbe teguntur."},
+    {n:228,t:"Tum vērō tremefacta novus per pectora cūnctīs"},
+    {n:229,t:"īnsinuat pavor, et scelus expendisse merentem"},
+    {n:230,t:"Lāocoönta ferunt, sacrum quī cuspide rōbur"},
+    {n:231,t:"laeserit et tergō scelerātam intorserit hastam."},
+    {n:232,t:"Dūcendum ad sēdēs simulācrum ōrandaque dīvae"},
+    {n:233,t:"nūmina conclāmant."},
+    {n:234,t:"Dīvīdimus mūrōs et moenia pandimus urbis."},
+    {n:235,t:"Accingunt omnēs operī pedibusque rotārum"},
+    {n:236,t:"subiiciunt lāpsūs, et stuppea vincula collō"},
+    {n:237,t:"intendunt: scandit fātālis māchina mūrōs"},
+  ]},
+  {id:18, book:2, title:"Horse at the Gate; Cassandra Warns", lines:[
+    {n:238,t:"fēta armīs. Puerī circuminnūptaeque puellae"},
+    {n:239,t:"sacra canunt fūnemque manū contingere gaudent:"},
+    {n:240,t:"illa subit mediaeque mināns inlābitur urbī."},
+    {n:241,t:"Ō patria, Ō dīvum domus Īlium et incluta bellō"},
+    {n:242,t:"moenia Dardanidum! Quarter ipsō in līmine portae"},
+    {n:243,t:"substitit atque uterō sonitum quarter arma dedēre;"},
+    {n:244,t:"īnstāmus tamen immemorēs caecīque furōre"},
+    {n:245,t:"et mōnstrum īnfēlīx sacrāta sistimus arce."},
+    {n:246,t:"Tunc etiam fātīs aperit Cassandra futūrīs"},
+    {n:247,t:"ōra deī iussū nōn umquam crēdita Teucrīs."},
+    {n:248,t:"Nōs dēlūbra deum miserī, quibus ultimus esset"},
+    {n:249,t:"ille diēs, fēstā vēlāmus fronde per urbem."},
+  ]},
+  {id:19, book:2, title:"Hector's Ghost Urges Aeneas to Leave I", lines:[
+    {n:270,t:"In somnīs, ecce, ante oculōs maestissimus Hector"},
+    {n:271,t:"vīsus adesse mihī largōsque effundere flētūs,"},
+    {n:272,t:"raptātus bīgīs ut quondam, āterque cruentō"},
+    {n:273,t:"pulvere perque pedēs trājectus lōra tumentēs."},
+    {n:274,t:"Ei mihi, quālis erat, quantum mūtātus ab illō"},
+    {n:275,t:"Hectore quī redit exuviās indūtus Achillī,"},
+    {n:276,t:"vel Danaum Phygiōs iaculātus puppibus ignēs;"},
+    {n:277,t:"squālentem barbam et concrētōs sanguine crīnēs"},
+    {n:278,t:"vulneraque illa gerēns, quae circum plūrima mūrōs"},
+    {n:279,t:"accēpit patriōs. Ultrō flēns ipse vidēbar"},
+    {n:280,t:"compellāre virum et maestās exprōmere vōcēs;"},
+    {n:281,t:'"Ō lūx Dardaniae, spēs Ō fīdissima Teucrum,'},
+    {n:282,t:"quae tantae tenuēre morae? Quibus Hector ab ōrīs"},
+    {n:283,t:"expectāte venīs? Ut tē post multa tuōrum"},
+    {n:284,t:"fūnera, post variōs hominumque urbisque labōrēs"},
+    {n:285,t:"dēfessī aspicimus! Quae causa indigna serēnōs"},
+    {n:286,t:'foedāvit vultūs? Aut cūr haec vulnera cernō?"'},
+  ]},
+  {id:20, book:2, title:"Hector's Ghost Urges Aeneas to Leave II", lines:[
+    {n:287,t:"Ille nihil, nec mē quaerentem vāna morātur,"},
+    {n:288,t:"Sed graviter gemitūs īmō dē pectore dūcēns,"},
+    {n:289,t:'"Heu fuge, nāte deā, tēque hīs" ait "ēripe flammīs.'},
+    {n:290,t:"Hostis habet mūrōs; ruit altō ā culmine Troia."},
+    {n:291,t:"Sat patriae Priamōque datum: sī Pergama dextrā"},
+    {n:292,t:"dēfendī possent, etiam hāc dēfēnsa fuissent."},
+    {n:293,t:"Sacra suōsque tibī commendat Troia penātēs"},
+    {n:294,t:"hōs cape fātōrum comitēs, hīs moenia quaere"},
+    {n:295,t:'magna, pererrātō statuēs quae dēnique pontō."'},
+    {n:296,t:"Sīc ait et manibus vittās Vestamque potentem"},
+    {n:297,t:"aeternumque adytīs effert penetrālibus ignem."},
+  ]},
+  {id:21, book:2, title:"Creusa's Ghost Urges Aeneas to Leave I", lines:[
+    {n:768,t:"Ausus quīn etiam vōcēs iactāre per umbram"},
+    {n:769,t:"implēvī clāmōre viās, maestusque Creūsam"},
+    {n:770,t:"nēquīquam ingemināns iterumque iterumque vocāvī."},
+    {n:771,t:"Quaerentī et tēctīs urbis sine fīne furentī"},
+    {n:772,t:"īnfēlīx simulācrum atque ipsius umbra Creūsae"},
+    {n:773,t:"vīsa mihi ante oculōs et nōtā maior imāgō."},
+    {n:774,t:"Obstipuī, stetēruntque comae et vōx faucibus haesit."},
+    {n:775,t:"Tum sīc adfārī et cūrās hīs dēmere dictīs:"},
+    {n:776,t:'"Quid tantum īnsānō iuvat indulgēre dolōrī,'},
+    {n:777,t:"Ō dulcis coniūnx? Nōn haec sine nūmine dīvom"},
+    {n:778,t:"ēveniunt; nec tē hinc comitem asportāre Creūsam"},
+    {n:779,t:"fās, aut ille sinit superī rēgnātor Olympī."},
+    {n:780,t:"Longa tibi exsilia, et vastum maris aequor arandum,"},
+    {n:781,t:"et terram Hesperiam veniēs, ubi Lȳdius arva"},
+    {n:782,t:"inter opīma virum lēnī fluit agmine Thybris:"},
+  ]},
+  {id:22, book:2, title:"Creusa's Ghost Urges Aeneas to Leave II", lines:[
+    {n:783,t:"illīc rēs laetae rēgnumque et rēgia coniūnx"},
+    {n:784,t:"parta tibī. Lacrimās dīlēctae pelle Creūsae."},
+    {n:785,t:"Nōn ego Myrmidonum sēdēs Dolopumve superbās"},
+    {n:786,t:"aspiciam, aut Grāiīs servītum mātribus ībō,"},
+    {n:787,t:"Dardanis, et dīvae Veneris nurus."},
+    {n:788,t:"Sed mē magna deum genetrīx hīs dētinet ōrīs:"},
+    {n:789,t:'iamque valē, et nātī servā commūnis amōrem."'},
+    {n:790,t:"Haec ubi dicta dedit, lacrimantem et multa volentem"},
+    {n:791,t:"dīcere dēseruit, tenuēsque recessit in aurās."},
+    {n:792,t:"Ter cōnātus ibī collō dare bracchia circum:"},
+    {n:793,t:"ter frūstrā comprēnsa manūs effūgit imāgō,"},
+    {n:794,t:"pār levibus ventīs volucrīque simillima somnō."},
+    {n:795,t:"Sīc dēmum sociōs cōnsūmptā nocte revīsō."},
+  ]},
+  // BOOK 4
+  {id:23, book:4, title:"Dido Confides with Anna I", lines:[
+    {n:1,t:"At rēgīna gravī iamdūdum saucia cūrā"},
+    {n:2,t:"vulnus alit vēnīs et caecō carpitur ignī."},
+    {n:3,t:"Multa virī virtūs animō multusque recursat"},
+    {n:4,t:"gentis honōs: haerent īnfīxī pectore vultūs"},
+    {n:5,t:"verbaque, nec placidam membrīs dat cūra quiētem."},
+    {n:6,t:"Postera Phoebēā lūstrābat lampade terrās"},
+    {n:7,t:"ūmentemque Aurōra polō dimōverat umbram,"},
+    {n:8,t:"cum sīc ūnanimam adloquitur male sāna sorōrem:"},
+    {n:9,t:'"Anna soror, quae mē suspēnsam īnsomnia terrent!'},
+    {n:10,t:"Quis novus hic nostrīs successit sēdibus hospes,"},
+    {n:11,t:"quem sēsē ōre ferēns, quam fortī pectore et armīs!"},
+    {n:12,t:"Crēdō equidem, nec vāna fidēs, genus esse deōrum."},
+    {n:13,t:"Dēgenerēs animōs timor arguit. Heu, quibus ille"},
+    {n:14,t:"iactātus fātīs! Quae bella exhausta canēbat!"},
+  ]},
+  {id:24, book:4, title:"Dido Confides with Anna II", lines:[
+    {n:15,t:"Sī mihi nōn animō fīxum immōtumque sedēret"},
+    {n:16,t:"nē cui mē vinclō vellem sociāre iugālī,"},
+    {n:17,t:"postquam prīmus amor dēceptam morte fefellit;"},
+    {n:18,t:"sī nōn pertaesum thalamī taedaeque fuisset,"},
+    {n:19,t:"huic ūnī forsan potuī succumbere culpae."},
+    {n:20,t:"Anna, fatēbor enim, miserī post fāta Sychaeī"},
+    {n:21,t:"coniugis et sparsōs frāternā caede penātēs"},
+    {n:22,t:"sōlus hic īnflexit sēnsūs animumque labantem"},
+    {n:23,t:"impulit. Agnōscō veteris vestīgia flammae."},
+    {n:24,t:"Sed mihi vel tellūs optem prius īma dehīscat"},
+    {n:25,t:"vel pater omnipotēns abigat mē fulmine ad umbrās"},
+    {n:26,t:"pallantēs umbrās Erebō noctemque profundam,"},
+    {n:27,t:"ante, pudor, quam tē violō aut tua iūra resolvō."},
+  ]},
+  {id:25, book:4, title:"Dido Confides with Anna III", lines:[
+    {n:28,t:"Ille meōs, prīmus quī mē sibi iūnxit, amōrēs"},
+    {n:29,t:'abstulit; ille habeat sēcum servetque sepulcrō."'},
+    {n:30,t:"Sīc effāta sinum lacrimīs implēvit obortīs."},
+    {n:31,t:'"Anna refert: "Ō lūce magis dīlēcta sorōrī,'},
+    {n:32,t:"sōlane perpetuā maerēns carpere iuventā"},
+    {n:33,t:"nec dulcēs nātōs Veneris nec praemia nōris?"},
+    {n:34,t:"Id cinerem aut mānēs crēdis cūrāre sepultōs?"},
+    {n:35,t:"Ēsto: aegram nūllī quondam flexēre marītī,"},
+    {n:36,t:"nōn Libyae, nōn ante Tyrō; dēspectus Iarbās"},
+    {n:37,t:"ductōrēsque aliī, quōs Āfrica terra triumphīs"},
+    {n:38,t:"dīves alit: placitōne etiam pugnābis amōrī?"},
+    {n:39,t:"Nec venit in mentem quōrum cōnsēderis arvīs?"},
+    {n:40,t:"Hinc Gaetūlae urbēs, genus īnsuperābile bellō,"},
+    {n:41,t:"et Numidae īnfrēnī cingunt et inhospita Syrtīs;"},
+  ]},
+  {id:26, book:4, title:"Dido Confides with Anna IV", lines:[
+    {n:42,t:"hinc dēserta sitī regiō lātēque furentēs"},
+    {n:43,t:"Barcaeī. Quid bella Tyrō surgentia dīcam"},
+    {n:44,t:"germānīque minās?"},
+    {n:45,t:"Dīs equidem auspicibus reor et Iūnōne secundā"},
+    {n:46,t:"hunc cursum Īliacās ventō tenuisse carīnās."},
+    {n:47,t:"Quam tū urbem, soror, hanc cernēs, quae surgere rēgna"},
+    {n:48,t:"coniugiō tālī! Teucrum comitantibus armīs"},
+    {n:49,t:"Pūnica sē quantīs attollet glōria rēbus!"},
+    {n:50,t:"Tū modo posce deōs veniam, sacrīsque litātīs"},
+    {n:51,t:"Indulgē hospitiō causāsque innecte morandī,"},
+    {n:52,t:"dum pelagō dēsaevit hiems et aquōsus Ōrīōn,"},
+    {n:53,t:"quassātaeque ratēs, dum nōn tractābile caelum."},
+    {n:54,t:"Hīs dictīs impēnsō animum flammāvit amōre"},
+    {n:55,t:"spemque dedit dubiae mentī solvitque pudōrem."},
+  ]},
+  {id:27, book:4, title:"After the Banquet Dido Is Distraught", lines:[
+    {n:74,t:"Nunc media Aenēān sēcum per moenia dūcit,"},
+    {n:75,t:"Sīdoniāsque ostentat opēs urbemque parātam;"},
+    {n:76,t:"incipit effārī, mediāque in vōce resistit;"},
+    {n:77,t:"nunc eadem lābente diē convīvia quaerit,"},
+    {n:78,t:"Īliacōsque iterum dēmēns audīre labōrēs"},
+    {n:79,t:"exposcit, pendetque iterum nārrantis ab ōre."},
+    {n:80,t:"Post, ubi dīgressī, lūmenque obscūra vicissim"},
+    {n:81,t:"lūna premit suādentque cadentia sīdera somnōs,"},
+    {n:82,t:"sōla domō maeret vacuā, strātīsque relictīs"},
+    {n:83,t:"incubat, illum absēns absentem auditque videtque;"},
+    {n:84,t:"aut gremiō Ascanium, genitōris imāgine captā,"},
+    {n:85,t:"dētinet, īnfandum sī fallere possit amōrem."},
+  ]},
+  {id:28, book:4, title:"Dido Stops Building; The Cave", lines:[
+    {n:86,t:"Nōn coeptae adsurgunt turrēs, nōn arma iuventus"},
+    {n:87,t:"exercet, portusve aut prōpugnācula bellō"},
+    {n:88,t:"tūta parant; pendent opera interrupta, minaeque"},
+    {n:89,t:"mūrōrum ingentēs aequātaque māchina caelō."},
+    {n:165,t:"Spēluncam Dīdō dux et Troiānus eandem"},
+    {n:166,t:"dēveniunt. Prīma et Tellūs et prōnuba Iūnō"},
+    {n:167,t:"dant signum; fulsēre ignēs et cōnscius aethēr"},
+    {n:168,t:"cōnūbiīs, summōque ululārunt vertice nymphae."},
+    {n:169,t:"Ille diēs prīmus lētī prīmusque malōrum"},
+    {n:170,t:"causa fuit; neque enim speciē fāmāve movētur"},
+    {n:171,t:"nec iam fūrtīvum Dīdō meditātur amōrem:"},
+    {n:172,t:"coniugium vocat, hōc praetexit nōmine culpam."},
+  ]},
+  {id:29, book:4, title:"Fama as a Monster", lines:[
+    {n:173,t:"Extemplō Libyae magnās it Fāma per urbēs,"},
+    {n:174,t:"Fāma, malum quā nōn aliud vēlōcius ūllum:"},
+    {n:175,t:"mōbilitāte viget vīrēsque adquīrit eundō,"},
+    {n:176,t:"parva metū prīmō, mox sēsē attollit in aurās"},
+    {n:177,t:"ingrediturque solō et caput inter nūbila condit."},
+    {n:178,t:"Illam Terra parēns īrā inrītāta deōrum"},
+    {n:179,t:"extrēmum, ut perhibent, Coeō Enceladōque sorōrem"},
+    {n:180,t:"prōgenuit pedibus celerem et pernīcibus ālīs,"},
+    {n:181,t:"mōnstrum horrendum, ingēns, cui quot sunt corpore plūmae,"},
+    {n:182,t:"tot vigilēs oculī subter (mīrabile dictū),"},
+    {n:183,t:"tot linguae, totidem ōra sonant, tot subrigit aurēs."},
+    {n:184,t:"Nocte volant caelī mediō terraeque per umbram"},
+    {n:185,t:"strīdēns, nec dulcī dēclīnat lūmina somnō;"},
+  ]},
+  {id:30, book:4, title:"Fama Reveals Dido and Aeneas", lines:[
+    {n:186,t:"lūce sedet custōs aut summī culmine tēctī"},
+    {n:187,t:"turribus aut altīs, et magnās territat urbēs,"},
+    {n:188,t:"tam fictī prāvīque tenāx quam nuntia vērī."},
+    {n:189,t:"Haec tum multiplicī populōs sermōne replēbat"},
+    {n:190,t:"gaudēns, et pariter facta atque īnfecta canēbat:"},
+    {n:191,t:"vēnisse Aenēān Troiānō sanguine crētum,"},
+    {n:192,t:"cui sē pulchra virō dignētur iungere Dīdō;"},
+    {n:193,t:"nunc hiemem inter sē luxū, quam longa, fovēre"},
+    {n:194,t:"rēgnōrum immemorēs turpīque cupīdine captōs."},
+    {n:195,t:"Haec passim dea foeda virum diffundit in ōra."},
+    {n:196,t:"Prōtinus ad rēgem cursūs dētorquet Iarbān"},
+    {n:197,t:"incenditque animum dictīs atque aggerat īrās."},
+  ]},
+  {id:31, book:4, title:"Dido Discovers Aeneas' Deception", lines:[
+    {n:305,t:'"Dissimulāre etiam spērāstī, perfide, tantum'},
+    {n:306,t:"posse nefās tacitusque meā dēcēdere terrā?"},
+    {n:307,t:"Nec tē noster amor nec tē data dextera quondam"},
+    {n:308,t:"nec moritūra tenet crūdēlī fūnere Dīdō?"},
+    {n:309,t:"Quīn etiam hībernō mōlīris sīdere classem"},
+    {n:310,t:"et mediīs properās Aquilōnibus īre per altum,"},
+    {n:311,t:"crūdēlis? Quid, sī nōn arva aliēna domōsque"},
+    {n:312,t:"ignōtās peterēs, et Troia antīqua manēret,"},
+    {n:313,t:"Troia per undōsum peterētur classibus aequor?"},
+  ]},
+  {id:32, book:4, title:"Dido Reminds Aeneas of His Pledges", lines:[
+    {n:314,t:"Mēne fugis? Per ego hās lacrimās dextramque tuam tē"},
+    {n:315,t:"(quandō aliud mihi iam miserae nihil ipsa relīquī),"},
+    {n:316,t:"per cōnūbia nostra, per inceptōs hymenaeōs,"},
+    {n:317,t:"sī bene quid dē tē meruī, fuit aut tibi quicquam"},
+    {n:318,t:"dulce meum, miserēre domūs lābentis et istam,"},
+    {n:319,t:"ōrō, sī quis adhūc precibus locus, exue mentem."},
+    {n:320,t:"Tē propter Libycae gentēs Nomadumque tyrannī"},
+    {n:321,t:"ōdēre, īnfensī Tyriī; tē propter eundem"},
+    {n:322,t:"exstīnctus pudor et, quā sōlā sīdera adībam,"},
+    {n:323,t:"fāma prior. Cui mē moribundam dēseris,--hospes"},
+    {n:324,t:"(hoc solum nōmen quoniam dē coniuge restat)?"},
+    {n:325,t:"Quid moror? An mea Pygmaliōn dum moenia frāter"},
+    {n:326,t:"dēstruat aut captam dūcat Gaetūlus Iarbās?"},
+  ]},
+  {id:33, book:4, title:"Dido Laments; Aeneas Responds", lines:[
+    {n:327,t:"saltem sī qua mihī dē tē suscepta fuisset"},
+    {n:328,t:"ante fugam subolēs, sī quis mihi parvulus aulā"},
+    {n:329,t:"lūderet Aenēās, quī tē tamen ōre referret,"},
+    {n:330,t:'nōn equidem omnīnō capta ac dēserta vidērer."'},
+    {n:331,t:"Dīxerat. Ille Iovis monitīs immōta tenēbat"},
+    {n:332,t:"lūmina et obnixus cūram sub corde premēbat."},
+    {n:333,t:'"Tandem pauca refert: "Ego tē, quae plūrima fandō'},
+    {n:334,t:"ēnumerāre valēs, numquam, rēgīna, negābō"},
+    {n:335,t:"prōmeritam, nec mē meminisse pigēbit Elissae"},
+    {n:336,t:"dum memor ipse meī, dum spīritus hōs regit artūs."},
+    {n:337,t:"Prō rē pauca loquar. Neque ego hanc abscondere fūrtō"},
+    {n:338,t:"spērāvī (nē finge) fugam, nec coniugis umquam"},
+    {n:339,t:"praetendī taedās aut haec in foedera vēnī."},
+  ]},
+  {id:34, book:4, title:"Aeneas Denies Marrying Dido", lines:[
+    {n:340,t:"Mē sī fāta meīs paterentur dūcere vītam"},
+    {n:341,t:"auspiciīs et sponte meā compōnere cūrās,"},
+    {n:342,t:"urbem Troiānam prīmum dulcēsque meōrum"},
+    {n:343,t:"relliquiās colerem, Priamī tēcta alta manērent,"},
+    {n:344,t:"et recidīva manū posuissem Pergama victīs."},
+    {n:345,t:"Sed nunc Ītaliam magnam Grȳnēus Apollō,"},
+    {n:346,t:"Ītaliam Lyciae iussēre capessere sortēs;"},
+    {n:347,t:"hic amor, haec patria est. Sī tē Karthāginis arcēs"},
+    {n:348,t:"Phoenissam Libycaeque aspectus dētinet urbis,"},
+    {n:349,t:"quae tandem Ausoniā Teucrōs cōnsidere terrā"},
+    {n:350,t:"invidia est? Et nōs fās extera quaerere rēgna."},
+  ]},
+  {id:35, book:4, title:"Aeneas: Father, Son, and Gods Drive Him", lines:[
+    {n:351,t:"Mē patris Anchīsae, quotiēns ūmentibus umbrīs."},
+    {n:352,t:"nox operit terrās, quotiēns astra ignea surgunt,"},
+    {n:353,t:"admonet in somnīs et turbida terret imāgō;"},
+    {n:354,t:"mē puer Ascanius capitisque iniūria cārī,"},
+    {n:355,t:"quem rēgnō Hesperiae fraudō et fātālibus arvīs."},
+    {n:356,t:"Nunc etiam interpres dīvum Iove missus ab ipsō"},
+    {n:357,t:"(testor utrumque caput) celerēs mandāta per aurās"},
+    {n:358,t:"dētulit: ipse deum manifestō in lūmine vīdī"},
+    {n:359,t:"intrantem mūrōs vōcemque hīs auribus hausī."},
+    {n:360,t:"Dēsine mēque tuīs incendere tēque querēlīs;"},
+    {n:361,t:'Ītaliam nōn sponte sequor."'},
+  ]},
+  // BOOK 6
+  {id:36, book:6, title:"Aeneas Spots Dido in the Underworld", lines:[
+    {n:450,t:"Inter quās Phoenissa recēns ā vulnere Dīdō"},
+    {n:451,t:"errābat silvā in magnā; quam Trōius hērōs"},
+    {n:452,t:"ut prīmum iuxtā stetit agnōvitque per umbrās"},
+    {n:453,t:"obscūram, quālem prīmō quī surgere mēnse"},
+    {n:454,t:"aut videt aut vīdisse putat per nūbila lūnam,"},
+    {n:455,t:"dēmisit lacrimās dulcīque adfātus amōre est"},
+    {n:456,t:'"Īnfēlīx Dīdō, vērus mihi nuntius ergō'},
+    {n:457,t:"vēnerat exstinctam ferrōque extrēma secūtam?"},
+    {n:458,t:"Fūneris heu tibi causa fuī? Per sīdera iūrō,"},
+    {n:459,t:"per superōs et sī qua fidēs tellūre sub īmā est,"},
+    {n:460,t:"invītus, rēgīna, tuō dē lītore cessī."},
+    {n:461,t:"Sed mē iussa deum, quae nunc hās īre per umbrās,"},
+    {n:462,t:"per loca senta sitū cōgunt noctemque profundam,"},
+    {n:463,t:"imperiīs ēgēre suīs; nec crēdere quīvī"},
+    {n:464,t:"hunc tantum tibi mē discessū ferre dolōrem."},
+  ]},
+  {id:37, book:6, title:"Aeneas Pleads; Dido Walks Away", lines:[
+    {n:465,t:"Siste gradum tēque aspectū nē subtrahe nostrō."},
+    {n:466,t:'Quem fugis? Extrēmum fātō quod tē adloquor hoc est."'},
+    {n:467,t:"Tālibus Aenēās ardentem et torva tuentem"},
+    {n:468,t:"lēnībat dictīs animum lacrimāsque ciēbat."},
+    {n:469,t:"Illa solō fīxōs oculōs āversa tenēbat"},
+    {n:470,t:"nec magis inceptō vultum sermonē movētur"},
+    {n:471,t:"quam sī dūra silex aut stet Marpēsia cautēs."},
+    {n:472,t:"Tandem corripuit sēsē atque inimīca refūgit"},
+    {n:473,t:"in nemus umbriferum, coniūnx ubi prīstinus illī"},
+    {n:474,t:"respondet cūrīs aequatque Sychaeus amōrem."},
+    {n:475,t:"Nec minus Aenēās cāsū concussus inīquō"},
+    {n:476,t:"prōsequitur lacrimīs longē et miserātur euntem."},
+  ]},
+  {id:38, book:6, title:"Anchises Points Out Augustus", lines:[
+    {n:788,t:'"Hūc geminās nunc flecte aciēs, hanc aspice gentem'},
+    {n:789,t:"Rōmānōsque tuōs. Hīc Caesar et omnis Iūlī"},
+    {n:790,t:"prōgeniēs magnum caelī ventūra sub axem."},
+    {n:791,t:"Hīc vir, hic est, tibi quem prōmittī saepius audīs,"},
+    {n:792,t:"Augustus Caesar, dīvī genus, aurea condet"},
+    {n:793,t:"saecula quī rūrsus Latiō rēgnāta per arva"},
+    {n:794,t:"Sāturnō quondam, super et Garamantas et Indōs"},
+    {n:795,t:"prōferet imperium: iacet extrā sīdera tellūs,"},
+    {n:796,t:"extrā annī sōlisque viās, ubi caelifer Atlās"},
+    {n:797,t:"axem umerō torquet stēllīs ārdentibus aptum."},
+  ]},
+  {id:39, book:6, title:"Anchises: Excellence of Romans", lines:[
+    {n:798,t:"Huius in adventum iam nunc et Caspia rēgna"},
+    {n:799,t:"respōnsīs horrent dīvum et Maeōtia tellūs,"},
+    {n:800,t:'et septemgeminī turbant trepida ōstia Nīlī."'},
+    {n:847,t:"Excūdent aliī spīrantia mollies aera"},
+    {n:848,t:"(crēdō equidem), vīvōs dūcent dē marmore vultūs"},
+    {n:849,t:"ōrābunt causās melius, caelīque meātus"},
+    {n:850,t:"dēscribent radiō et surgentia sīdera dīcent:"},
+    {n:851,t:"tū regere imperiō populōs, Rōmāne, mementō"},
+    {n:852,t:"(hae tibi erunt artēs), pācisque impōnere mōrem,"},
+    {n:853,t:'parcere subiectīs et dēbellāre superbōs."'},
+  ]},
+  // BOOK 7
+  {id:40, book:7, title:"King Latinus, Lavinia, and Turnus", lines:[
+    {n:45,t:"Rēx arva Latīnus et urbēs"},
+    {n:46,t:"iam senior longā placidās in pāce regēbat."},
+    {n:47,t:"Hunc Faunō et nymphā genitum Laurente Marīcā"},
+    {n:48,t:"accipimus, Faunō Pīcus pater isque parentem"},
+    {n:49,t:"tē, Sāturne, refert, tū sanguinis ultimus auctor."},
+    {n:50,t:"fīlius huic fātō dīvum prōlēsque virīlis"},
+    {n:51,t:"nūlla fuit prīmāque oriēns ērepta iuventā est."},
+    {n:52,t:"Sōla domum et tantās servābat fīlia sēdēs,"},
+    {n:53,t:"iam mātūra virō, iam plēnīs nūbilis annīs."},
+    {n:54,t:"Multī illam magnō ē Latiō tōtāque petēbant"},
+    {n:55,t:"Ausoniā. Petit ante aliōs pulcherrimus omnēs"},
+    {n:56,t:"Turnus, avīs atavīsque potēns, quem rēgia coniūnx"},
+    {n:57,t:"adiungī generum mīrō properābat amōre;"},
+    {n:58,t:"sed variīs portenta deum terrōribus obstant."},
+  ]},
+  {id:41, book:7, title:"Turnus' Armor", lines:[
+    {n:783,t:"Ipse inter prīmōs praestantī corpore Turnus"},
+    {n:784,t:"vertitur arma tenēns et tōtō vertice suprā est."},
+    {n:785,t:"Cui triplicī crīnīta iubā galea alta Chimaeram"},
+    {n:786,t:"sustinet, Aetnaeōs efflantem faucibus ignēs:"},
+    {n:787,t:"tam magis illa fremēns et trīstibus effera flammīs,"},
+    {n:788,t:"quam magis effūsō crūdēscunt sanguine pugnae."},
+    {n:789,t:"At lēvem clipeum sublātīs cornibus Iō"},
+    {n:790,t:"aurō īnsignībat, iam saetīs obsita, iam bōs"},
+    {n:791,t:"(argūmentum ingēns), et cūstōs virginis Argus"},
+    {n:792,t:"caelātāque amnem fundēns pater Īnachus urnā."},
+  ]},
+  {id:42, book:7, title:"Camilla Prepares for War", lines:[
+    {n:803,t:"Hōs super advēnit Volscā dē gente Camilla"},
+    {n:804,t:"agmen agēns equitum et flōrentēs aere catervās,"},
+    {n:805,t:"bellātrīx, nōn illa colō calathīsve Minervae"},
+    {n:806,t:"fēmineās adsuēta manūs, sed proelia virgo"},
+    {n:807,t:"dūra patī cursūque pedum praevertere ventōs."},
+    {n:808,t:"Illa vel intāctae segetis per summa volāret"},
+    {n:809,t:"grāmina nec tenerās cursū laesisset aristās,"},
+    {n:810,t:"vel mare per medium flūctū suspēnsa tumentī"},
+    {n:811,t:"ferret iter celeris nec tingueret aequore plantās."},
+    {n:812,t:"Illam omnis tēctīs agrīsque effūsa iuventūs"},
+    {n:813,t:"turbaque mīrātur mātrum et prōspectat euntem,"},
+    {n:814,t:"attonitīs inhiāns animīs, ut rēgius ostrō"},
+    {n:815,t:"vēlet honōs lēvēs umerōs, ut fībula crīnem"},
+    {n:816,t:"aurō internectat, Lyciam ut gerat ipsa pharetram"},
+    {n:817,t:"et pāstōrālem praefīxā cuspide myrtum."},
+  ]},
+  // BOOK 11
+  {id:43, book:11, title:"Diana Tells Opis About Camilla's Childhood I", lines:[
+    {n:532,t:"Vēlōcem intereā superīs in sēdibus Ōpim,"},
+    {n:533,t:"ūnam ex virginibus sociīs sacrāque catervā,"},
+    {n:534,t:"compellābat et hās trīstis Lātōnia vōcēs"},
+    {n:535,t:"ōre dabat: \"Graditur bellum ad crūdēle Camilla,"},
+    {n:536,t:"Ō virgō, et nostrīs nēquīquam cingitur armīs,"},
+    {n:537,t:"cāra mihi ante aliās. Neque enim novus iste Diānae"},
+    {n:538,t:"vēnit amor subitāque animum dulcēdine mōvit."},
+    {n:539,t:"Pulsus ob invidiam rēgnō vīrēsque superbās"},
+    {n:540,t:"Prīvernō antīquā Metabus cum excēderet urbe,"},
+    {n:541,t:"īnfantem fugiēns media inter proelia bellī"},
+    {n:542,t:"sustulit exsiliō comitem mātrisque vocāvit"},
+    {n:543,t:"nōmine Casmillae mūtātā parte Camillam."},
+  ]},
+  {id:44, book:11, title:"Diana Tells Opis About Camilla's Childhood II", lines:[
+    {n:544,t:"Ipse sinū prae sē portāns iuga longa petēbat"},
+    {n:545,t:"sōlōrum nemorum: tēla undique saeva premēbant"},
+    {n:546,t:"et circumfūsō volitābant mīlite Volscī."},
+    {n:547,t:"Ecce fugae mediō summīs Amasēnus abundāns"},
+    {n:548,t:"spūmābat rīpīs: tantus sē nūbibus imber"},
+    {n:549,t:"rūperat. Ille, innāre parāns, īnfantis amōre"},
+    {n:550,t:"tardātur cārōque onerī timet. Omnia sēcum"},
+    {n:551,t:"versantī subitō vix haec sententia sēdit."},
+    {n:552,t:"Tēlum immāne manū validā quod forte gerēbat"},
+    {n:553,t:"bellātor, solidum nōdīs et rōbore coctō,"},
+    {n:554,t:"huic nātam, librō et silvestrī sūbere clausam,"},
+    {n:555,t:"implicat atque habilem mediae circumligat hastae;"},
+    {n:556,t:"quam dextrā ingentī lībrāns ita ad aethera fātur:"},
+  ]},
+  {id:45, book:11, title:"Diana Tells Opis About Camilla's Childhood III", lines:[
+    {n:557,t:"'Alma, tibi hanc, nemorum cultrīx, Lātōnia virgō,"},
+    {n:558,t:"ipse pater famulam voveō; tua prīma per aurās"},
+    {n:559,t:"tēla tenēns supplex hostem fugit. Accipe, testor,"},
+    {n:560,t:"dīva tuam, quae nunc dubiīs committitur aurīs.'"},
+    {n:561,t:"Dīxit et adductō contortum hastīle lacertō"},
+    {n:562,t:"immittit: sonuēre undae, rapidum super amnem"},
+    {n:563,t:"īnfēlīx fugit in iaculō strīdente Camilla."},
+    {n:564,t:"At Metabus, magnā propius iam urgente catervā,"},
+    {n:565,t:"dat sēsē fluviō atque hastam cum virgine victor"},
+    {n:566,t:"grāmineō dōnum Triviae dē caespite vellit."},
+    {n:567,t:"Nōn illum tēctīs ūllae, nōn moenibus urbēs"},
+    {n:568,t:"accēpēre neque ipse manūs feritāte dedisset:"},
+    {n:569,t:"pāstōrum et sōlīs exēgit montibus aevum."},
+  ]},
+  {id:46, book:11, title:"Diana Tells Opis About Camilla's Childhood IV", lines:[
+    {n:570,t:"Hic nātam in dūmīs interque horrentia lustra"},
+    {n:571,t:"armentālis equae mammīs et lacte ferīnō"},
+    {n:572,t:"nūtrībat, tenerīs immulgēns ūbera labrīs."},
+    {n:573,t:"Utque pedum prīmīs īnfāns vestīgia plantīs"},
+    {n:574,t:"īnstiterat, iaculō palmās armāvit acūtō"},
+    {n:575,t:"spīculaque ex umerō parvae suspendit et arcum."},
+    {n:576,t:"Prō crīnālī aurō, prō longae tegmine pallae"},
+    {n:577,t:"tigridis exuviae per dorsum ā vertice pendent."},
+    {n:578,t:"Tēla manū iam tum tenerā puerīlia torsit"},
+    {n:579,t:"et fundam teretī circum caput ēgit habēnā"},
+    {n:580,t:"Strȳmoniamque gruem aut album dēiēcit olōrem."},
+  ]},
+  {id:47, book:11, title:"Diana Tells Opis About Camilla's Childhood V", lines:[
+    {n:581,t:"Multae illam frūstrā Tyrrhēna per oppida mātrēs"},
+    {n:582,t:"optāvēre nurum: sōlā contenta Diānā"},
+    {n:583,t:"aeternum tēlōrum et virginitātis amōrem"},
+    {n:584,t:"intemerāta colit. Vellem haud correpta fuisset"},
+    {n:585,t:"mīlitiā tālī, cōnāta lacessere Teucrōs:"},
+    {n:586,t:"cāra mihī comitumque foret nunc ūna meārum."},
+    {n:587,t:"Vērum age, quandōquidem fātīs urgētur acerbīs,"},
+    {n:588,t:"lābere, nympha, polō fīnēsque invīse Latīnōs,"},
+    {n:589,t:"trīstis ubi īnfaustō committitur ōmine pugna."},
+    {n:590,t:"Haec cape et ultrīcem pharetrā dēprōme sagittam:"},
+    {n:591,t:"hāc quīcumque sacrum violārit vulnere corpus,"},
+    {n:592,t:"Trōs Italusque, mihī pariter det sanguine poenās."},
+    {n:593,t:"Post ego nūbe cavā miserandae corpus et arma"},
+    {n:594,t:'īnspoliāta feram tumulō patriaeque repōnam."'},
+  ]},
+  // BOOK 12
+  {id:48, book:12, title:"Jupiter and Juno Reconcile I", lines:[
+    {n:791,t:"Iūnōnem intereā rēx omnipotentis Olympī"},
+    {n:792,t:"adloquitur fulvā pugnās dē nūbe tuentem:"},
+    {n:793,t:'"Quae iam fīnis erit, coniūnx? Quid dēnique restat?'},
+    {n:794,t:"indigetem Aenēān scīs ipsa et scīre fatēris"},
+    {n:795,t:"dēbērī caelō fātīsque ad sīdera tollī."},
+    {n:796,t:'Quid struis? Aut quā spē gelidīs in nubibus haerēs?"'},
+    {n:803,t:'"Ventum ad suprēmum est. Terrīs agitāre vel undīs'},
+    {n:804,t:"Troiānōs potuistī, īnfandum accendere bellum,"},
+    {n:805,t:"dēformāre domum et lūctū mīscēre hymenaeōs:"},
+    {n:806,t:'ulterius temptāre vetō." Sīc Juppiter orsus;'},
+    {n:807,t:"sīc dea submissō contrā Sāturnia vultū:"},
+    {n:808,t:'"Ista quidem quia nōta mihī tua, magne, voluntās,'},
+    {n:809,t:"Iuppiter, et Turnum et terrās invīta relīquī;"},
+  ]},
+  {id:49, book:12, title:"Jupiter and Juno Reconcile II", lines:[
+    {n:810,t:"nec tū mē āeriā sōlam nunc sēde vidērēs"},
+    {n:811,t:"digna indigna patī, sed flammīs cincta sub ipsā"},
+    {n:812,t:"stārem aciē traheremque inimīca in proelia Teucrōs."},
+    {n:818,t:"Et nunc cēdō equidem pugnāsque exōsa relinquō."},
+    {n:819,t:"Illud tē, nūllā fātī quod lēge tenētur,"},
+    {n:820,t:"prō Latiō obtestor, prō maiestāte tuōrum."},
+    {n:821,t:"cum iam cōnubiīs pācem fēlīcibus (estō)"},
+    {n:822,t:"compōnent, cum iam lēgēs et foedera iungent,"},
+    {n:823,t:"nē vetus indigenās nōmen mutāre Latīnōs"},
+    {n:824,t:"neu Trōās fierī iubeās Teucrōsque vocārī"},
+    {n:825,t:"aut vōcem mutāre virōs aut vertere vestem."},
+    {n:826,t:"Sit Latium, sint Albānī per saecula rēgēs,"},
+    {n:827,t:"sit Rōmāna potēns Italā virtūte propāgō:"},
+    {n:828,t:'occidit, occideritque sinās cum nōmine Trōia."'},
+  ]},
+  {id:50, book:12, title:"Aeneas Strikes Turnus", lines:[
+    {n:919,t:"Cūnctantī telum Aenēās fatāle coruscat,"},
+    {n:920,t:"sortitus fortūnam oculīs, et corpore tōtō"},
+    {n:921,t:"ēminus intorquet. Mūrālī concita numquam"},
+    {n:922,t:"tormentō sīc saxa fremunt nec fulmine tantī"},
+    {n:923,t:"dissultant crepitūs. Volat ātrī turbinis īnstar"},
+    {n:924,t:"exitium dīrum hasta ferēns ōrāsque reclūdit"},
+    {n:925,t:"lōricae et clipeī extrēmōs septemplicis orbēs;"},
+    {n:926,t:"per medium strīdēns transit femur. Incidit ictus"},
+    {n:927,t:"ingēns ad terram duplicātō pōplite Turnus."},
+    {n:928,t:"Consurgunt gemitū Rutulī totusque remūgit"},
+    {n:929,t:"mōns circum et vōcem lātē nemora alta remittunt."},
+  ]},
+  {id:51, book:12, title:"Turnus Surrenders and Begs for His Life", lines:[
+    {n:930,t:"Ille humilis supplex oculōs dextramque precantem"},
+    {n:931,t:'prōtendēns "Equidem meruī nec dēprecor" inquit:'},
+    {n:932,t:'"Ūtere sorte tuā. Miserī tē sī qua parentis'},
+    {n:933,t:"tangere cūra potest, ōrō (fuit et tibi tālis"},
+    {n:934,t:"Anchīses genitor) Daunī miserēre senectae"},
+    {n:935,t:"et mē, seu corpus spoliātum lūmine māvīs,"},
+    {n:936,t:"redde meīs. Vīcistī et victum tendere palmās"},
+    {n:937,t:"Ausoniī vīdēre; tua est Lāvīnia coniūnx,"},
+    {n:938,t:"Ulterius nē tende odiīs. Stetit ācer in armīs"},
+    {n:939,t:"Aenēās volvēns oculōs dextramque repressit;"},
+  ]},
+  {id:52, book:12, title:"Aeneas Kills Turnus", lines:[
+    {n:940,t:"Et iam iamque magis cūnctantem flectere sermō"},
+    {n:941,t:"coeperat, īnfēlīx umerō cum apparuit altō"},
+    {n:942,t:"balteus et nōtīs fulsērunt cingula bullīs"},
+    {n:943,t:"Pallantis puerī, victum quem vulnere Turnus"},
+    {n:944,t:"strāverat atque umerīs inimīcum īnsigne gerēbat."},
+    {n:945,t:"Ille, oculīs postquam saevī monimenta dolōris"},
+    {n:946,t:"exuviāsque hausit, furiīs accensus et īrā"},
+    {n:947,t:'terribilis: "Tūne hinc spoliīs indūte meōrum'},
+    {n:948,t:"ēripiāre mihi? Pallās tē hōc vulnere, Pallās"},
+    {n:949,t:'immolat et poenam scelerātō ex sanguine sūmit."'},
+    {n:950,t:"Hoc dīcēns ferrum adversō sub pectore condit"},
+    {n:951,t:"fervidus; ast illī solvuntur frīgore membra"},
+    {n:952,t:"vītaque cum gemitū fugit indignāta sub umbrās."},
+  ]},
+];
+
+const BOOKS = [...new Set(LESSONS.map(l => l.book))];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+
+let state = {
+  apiKey: localStorage.getItem('vergil_api_key') || '',
+  // progress: { lessonId: { chunks: [{start, end, status}] } }
+  progress: JSON.parse(localStorage.getItem('vergil_progress') || '{}'),
+  activeBook: 6,
+  activeLesson: null,
+  currentChunk: null, // {lessonId, lines: [{n,t}], overflowStart: null}
+  phase: 'idle', // idle | quiz | grading | feedback
+  lastFeedback: null,
+  overflowLine: null, // a single line carried from prev chunk to provide context
+};
+
+function saveProgress() {
+  localStorage.setItem('vergil_progress', JSON.stringify(state.progress));
+}
+
+function markChunkStatus(lessonId, chunkKey, status) {
+  if (!state.progress[lessonId]) state.progress[lessonId] = {};
+  if (status === null) {
+    delete state.progress[lessonId][chunkKey];
+  } else {
+    state.progress[lessonId][chunkKey] = status;
+  }
+  saveProgress();
+  renderTOC();
+}
+
+function getLessonProgress(lesson) {
+  const p = state.progress[lesson.id] || {};
+  const chunks = getChunks(lesson);
+  let done = 0, review = 0;
+  chunks.forEach((c,i) => {
+    const s = p[i];
+    if (s === 'done') done++;
+    else if (s === 'review') review++;
+  });
+  return { done, review, total: chunks.length };
+}
+
+// ═══════════════════════════════════════════════════════
+// CHUNKING — 4-6 lines, no sentence cutoff
+// ═══════════════════════════════════════════════════════
+
+function lineEndsSentence(text) {
+  const t = text.trim();
+  // Break on: period, !, ?, or a closing quote that follows punctuation
+  // Do NOT break on a bare " that opens or continues speech
+  return /[.!?]"?$/.test(t) || /[.!?]\u201d?$/.test(t);
+}
+
+// Memoized chunk cache — computed once per lesson, never varies between calls
+const _chunkCache = {};
+function getChunks(lesson) {
+  if (_chunkCache[lesson.id]) return _chunkCache[lesson.id];
+  const lines = lesson.lines;
+  const chunks = [];
+  let i = 0;
+  while (i < lines.length) {
+    let end = Math.min(i + 4, lines.length);
+    while (end < lines.length && end < i + 6 && !lineEndsSentence(lines[end-1].t)) {
+      end++;
+    }
+    chunks.push(lines.slice(i, end));
+    i = end;
+  }
+  _chunkCache[lesson.id] = chunks;
+  return chunks;
+}
+
+function getChunkForLesson(lesson, chunkIdx) {
+  const chunks = getChunks(lesson);
+  return chunks[chunkIdx] || null;
+}
+
+// ═══════════════════════════════════════════════════════
+// TOKEN MODAL
+// ═══════════════════════════════════════════════════════
+
+function openTokenModal() {
+  document.getElementById('tokenModal').classList.remove('hidden');
+  document.getElementById('tokenInput').value = state.apiKey;
+}
+function closeTokenModal() {
+  document.getElementById('tokenModal').classList.add('hidden');
+}
+function saveToken() {
+  const val = document.getElementById('tokenInput').value.trim();
+  state.apiKey = val;
+  localStorage.setItem('vergil_api_key', val);
+  closeTokenModal();
+  updateTokenIndicator();
+}
+function updateTokenIndicator() {
+  const ind = document.getElementById('tokenIndicator');
+  ind.className = 'token-indicator' + (state.apiKey ? ' ok' : '');
+}
+
+// ═══════════════════════════════════════════════════════
+// SIDEBAR / TOC
+// ═══════════════════════════════════════════════════════
+
+function renderBookTabs() {
+  const el = document.getElementById('bookTabs');
+  el.innerHTML = BOOKS.map(b =>
+    `<button class="book-tab${state.activeBook===b?' active':''}" onclick="selectBook(${b})">Book ${b}</button>`
+  ).join('');
+}
+
+function selectBook(b) {
+  state.activeBook = b;
+  renderBookTabs();
+  renderTOC();
+}
+
+function renderTOC() {
+  const el = document.getElementById('tocScroll');
+  const lessons = LESSONS.filter(l => l.book === state.activeBook);
+  el.innerHTML = lessons.map(l => {
+    const {done, review, total} = getLessonProgress(l);
+    let statusClass = '';
+    if (done === total) statusClass = 'done';
+    else if (review > 0) statusClass = 'review';
+    else if (done > 0) statusClass = 'partial';
+    const isActive = state.activeLesson && state.activeLesson.id === l.id;
+    const firstLine = l.lines[0].n;
+    const lastLine = l.lines[l.lines.length-1].n;
+
+    // Build chunk pills for the active lesson
+    let chunkPickerHTML = '';
+    if (isActive) {
+      const chunks = getChunks(l);
+      const p = state.progress[l.id] || {};
+      const pills = chunks.map((ch, i) => {
+        const chunkStatus = p[i];
+        const isActiveChunk = state.currentChunk &&
+          state.currentChunk.lesson.id === l.id &&
+          state.currentChunk.chunkIdx === i;
+        let pillClass = 'chunk-pill';
+        if (isActiveChunk) pillClass += ' active';
+        if (chunkStatus === 'done') pillClass += ' done';
+        if (chunkStatus === 'review') pillClass += ' review';
+        const startN = ch[0].n;
+        const endN = ch[ch.length-1].n;
+        const pillLabel = chunkStatus === 'done' ? `✓ ${startN}–${endN}` : chunkStatus === 'review' ? `⚑ ${startN}–${endN}` : `${startN}–${endN}`;
+        return `<button class="${pillClass}" onclick="event.stopPropagation();goToChunk(${l.id},${i})" title="Lines ${startN}–${endN}">${pillLabel}</button>`;
+      }).join('');
+      chunkPickerHTML = `<div class="chunk-picker">${pills}</div>`;
+    }
+
+    return `<div class="toc-lesson-group">
+      <div class="toc-lesson${isActive?' active':''}" onclick="startLesson(${l.id})">
+        <div class="toc-status ${statusClass}"></div>
+        <div class="toc-info">
+          <div class="toc-lesson-num">Lesson ${l.id}</div>
+          <div class="toc-lines">${l.title}</div>
+          <div class="toc-progress">${firstLine}–${lastLine} · ${done}/${total} chunks</div>
+        </div>
+      </div>${chunkPickerHTML}</div>`;
+  }).join('');
+}
+
+function goToChunk(lessonId, chunkIdx) {
+  const lesson = LESSONS.find(l => l.id === lessonId);
+  if (!lesson) return;
+  state.activeLesson = lesson;
+  // Pre-set currentChunk so renderTOC can highlight the right pill immediately
+  const chunks = getChunks(lesson);
+  state.currentChunk = { lesson, chunkIdx, chunk: chunks[chunkIdx], overflowLine: null };
+  renderTOC();
+  showQuiz(lesson, chunkIdx);
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+
+function startLesson(lessonId) {
+  const lesson = LESSONS.find(l => l.id === lessonId);
+  if (!lesson) return;
+  state.activeLesson = lesson;
+  const chunks = getChunks(lesson);
+  let startChunk = 0;
+  const p = state.progress[lessonId] || {};
+  for (let i = 0; i < chunks.length; i++) {
+    if (p[i] !== 'done') { startChunk = i; break; }
+    if (i === chunks.length - 1) startChunk = i;
+  }
+  // Pre-set currentChunk so renderTOC highlights the right pill immediately
+  state.currentChunk = { lesson, chunkIdx: startChunk, chunk: chunks[startChunk], overflowLine: null };
+  renderTOC();
+  showQuiz(lesson, startChunk);
+}
+
+function startRandom() {
+  const bookLessons = LESSONS.filter(l => l.book === state.activeBook);
+  const lesson = bookLessons[Math.floor(Math.random() * bookLessons.length)];
+  const chunks = getChunks(lesson);
+  const chunkIdx = Math.floor(Math.random() * chunks.length);
+  state.activeLesson = lesson;
+  renderTOC();
+  showQuiz(lesson, chunkIdx);
+}
+
+// ═══════════════════════════════════════════════════════
+// QUIZ RENDERING
+// ═══════════════════════════════════════════════════════
+
+function showQuiz(lesson, chunkIdx) {
+  const chunks = getChunks(lesson);
+  const chunk = chunks[chunkIdx];
+  if (!chunk) return;
+
+  // detect if sentence continues from prior chunk (overflow)
+  let overflowLine = null;
+  if (chunkIdx > 0) {
+    const prev = chunks[chunkIdx - 1];
+    const lastPrev = prev[prev.length - 1];
+    if (!lineEndsSentence(lastPrev.t)) {
+      overflowLine = lastPrev;
+    }
+  }
+
+  state.currentChunk = { lesson, chunkIdx, chunk, overflowLine };
+  state.phase = 'quiz';
+
+  const linesHTML = chunk.map(line =>
+    `<div class="latin-line">
+      <span class="line-num">${line.n}</span>
+      <span class="line-text">${escHTML(line.t)}</span>
+    </div>`
+  ).join('');
+
+  const overflowHTML = overflowLine
+    ? `<div class="overflow-note">↳ Sentence continues from: <em>${escHTML(overflowLine.t)}</em></div>`
+    : '';
+
+  // check if last line of chunk cuts off mid-sentence
+  const lastLine = chunk[chunk.length - 1];
+  const continuesNote = !lineEndsSentence(lastLine.t) && chunkIdx < chunks.length - 1
+    ? `<div class="overflow-note" style="margin-top:0.5rem">↳ Sentence continues in next chunk — translate up to here.</div>`
+    : '';
+
+  const p = state.progress[lesson.id] || {};
+  const status = p[chunkIdx];
+
+  const main = document.getElementById('mainArea');
+  main.innerHTML = `
+    <div class="quiz-card">
+      <div class="quiz-card-header">
+        <span class="quiz-card-title">Lesson ${lesson.id} · Book ${lesson.book} · ${escHTML(lesson.title)}</span>
+        <span class="quiz-card-meta">Chunk ${chunkIdx+1} of ${chunks.length}</span>
+      </div>
+      <div class="quiz-card-body">
+        ${overflowHTML}
+        <div class="latin-lines">${linesHTML}</div>
+        ${continuesNote}
+        <textarea id="translationInput" placeholder="Enter your translation here…" rows="5"></textarea>
+        <div class="quiz-actions">
+          <button class="submit-btn" onclick="submitTranslation()" id="submitBtn">Submit →</button>
+          <button class="mark-review-btn" id="markReviewBtn" onclick="toggleReviewFromQuiz(${lesson.id},${chunkIdx})">${(state.progress[lesson.id]||{})[chunkIdx]==='review' ? '⚑ Unmark Review' : '⚑ Mark for Review'}</button>
+          <button class="skip-btn" onclick="advanceChunk(1)">Skip →</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('translationInput').focus();
+  renderTOC();
+}
+
+// ═══════════════════════════════════════════════════════
+// GRADING
+// ═══════════════════════════════════════════════════════
+
+async function submitTranslation() {
+  if (!state.apiKey) { openTokenModal(); return; }
+  const input = document.getElementById('translationInput');
+  const userTranslation = input ? input.value.trim() : '';
+  if (!userTranslation) return;
+
+  if (window.location.protocol === 'file:') {
+    document.getElementById('mainArea').innerHTML = `
+      <div class="loading-card">
+        <div class="loading-text" style="color:var(--rust)">Cannot call API from file://</div>
+        <p style="font-size:14px;color:var(--slate);margin-top:1rem;line-height:1.7">
+          Serve with: <code>python3 -m http.server 8080</code><br>
+          then open <code>http://localhost:8080/vergil_quiz.html</code>
+        </p>
+      </div>`;
+    return;
+  }
+
+  const {lesson, chunkIdx, chunk, overflowLine} = state.currentChunk;
+  state.savedTranslation = userTranslation;
+  state.phase = 'grading';
+  showLoading('Grading your translation\u2026');
+
+  const latinText = chunk.map(l => `${l.n}: ${l.t}`).join('\n');
+  const contextNote = overflowLine ? `Note: sentence continues from previous line: "${overflowLine.t}"` : '';
+
+  const gradingPrompt = `You are a Latin teacher grading a student translation of Vergil's Aeneid. Be concise and precise.
+
+Latin lines:
+${latinText}
+${contextNote}
+
+Student translation:
+${userTranslation}
+
+Respond with ONLY a raw JSON object. No markdown fences. No explanation. Start with { and end with }.
+Required fields exactly:
+{
+  "grade": "excellent",
+  "summary": "one sentence",
+  "nailed": ["item"],
+  "corrections": ["item"],
+  "ideal": "line1\nline2\nline3"
+}
+grade must be one of: excellent good fair poor`;
+
+  let rawResponse = '';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1000,
+        messages: [
+          { role: 'user', content: gradingPrompt },
+          { role: 'assistant', content: '{' }
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    rawResponse = data.content.map(b => b.text || '').join('');
+
+    // Reconstruct full JSON (prefill gave us the opening '{')
+    let fullJSON = '{' + rawResponse;
+    // Strip any accidental markdown fences
+    fullJSON = fullJSON.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
+
+    let feedback;
+    try {
+      feedback = JSON.parse(fullJSON);
+    } catch(e1) {
+      // Try trimming to last valid }
+      const lastBrace = fullJSON.lastIndexOf('}');
+      feedback = JSON.parse(fullJSON.slice(0, lastBrace + 1));
+    }
+
+    if (!feedback.grade) throw new Error('Missing grade field in response');
+    showFeedback(feedback, lesson, chunkIdx);
+
+  } catch (e) {
+    document.getElementById('mainArea').innerHTML = `
+      <div class="feedback-card">
+        <div class="feedback-header poor">
+          <span class="feedback-grade">Grading Error</span>
+        </div>
+        <div class="feedback-body">
+          <div class="feedback-section">
+            <h4>Error</h4>
+            <p>${escHTML(e.message)}</p>
+          </div>
+          ${rawResponse ? `<div class="feedback-section">
+            <h4>Raw response</h4>
+            <div class="ideal-block" style="font-style:normal;font-size:12px;font-family:monospace;white-space:pre-wrap;word-break:break-all">${escHTML(('{'+rawResponse).slice(0, 600))}</div>
+          </div>` : ''}
+          <div class="feedback-actions">
+            <button class="btn-primary" onclick="retryWithTranslation()">Retry with saved translation</button>
+            <button class="btn-secondary" onclick="advanceChunk(1)">Skip</button>
+          </div>
+        </div>
+      </div>`;
+    state.phase = 'error';
+  }
+}
+
+function retryWithTranslation() {
+  const {lesson, chunkIdx} = state.currentChunk;
+  showQuiz(lesson, chunkIdx);
+  setTimeout(() => {
+    const ta = document.getElementById('translationInput');
+    if (ta && state.savedTranslation) ta.value = state.savedTranslation;
+  }, 50);
+}
+
+function showFeedback(feedback, lesson, chunkIdx) {
+  state.phase = 'feedback';
+  state.lastFeedback = feedback;
+
+  const gradeColors = {excellent:'excellent',good:'good',fair:'fair',poor:'poor'};
+  const cls = gradeColors[feedback.grade] || 'fair';
+
+  const nailedHTML = feedback.nailed?.length
+    ? `<div class="feedback-section"><h4>What you nailed</h4><ul>${feedback.nailed.map(x=>`<li>${escHTML(x)}</li>`).join('')}</ul></div>` : '';
+
+  const correctionsHTML = feedback.corrections?.length
+    ? `<div class="feedback-section"><h4>Corrections</h4><ul>${feedback.corrections.map(x=>`<li>${escHTML(x)}</li>`).join('')}</ul></div>` : '';
+
+  const idealFormatted = (feedback.ideal || '').replace(/\\n/g,'\n');
+
+  const chunks = getChunks(lesson);
+  const hasNext = chunkIdx < chunks.length - 1;
+
+  document.getElementById('mainArea').innerHTML = `
+    <div class="feedback-card">
+      <div class="feedback-header ${cls}">
+        <span class="feedback-grade">${feedback.grade.toUpperCase()} — ${escHTML(feedback.summary)}</span>
+      </div>
+      <div class="feedback-body">
+        ${nailedHTML}
+        ${correctionsHTML}
+        <div class="feedback-section">
+          <h4>Ideal Translation</h4>
+          <div class="ideal-block">${escHTML(idealFormatted)}</div>
+        </div>
+        <div class="feedback-actions">
+          <button class="btn-primary" onclick="advanceChunk(1)">${hasNext ? 'Next Chunk →' : 'Lesson Complete ✓'}</button>
+          <button class="btn-secondary" onclick="markReview(${lesson.id},${chunkIdx}); advanceChunk(1)">${(state.progress[lesson.id]||{})[chunkIdx]==='review' ? '⚑ Unflag &amp; Continue' : '⚑ Flag &amp; Continue'}</button>
+          <button class="btn-secondary" style="margin-left:auto" onclick="showQuiz(state.currentChunk.lesson, state.currentChunk.chunkIdx)">Retry</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // auto-mark done if grade is good/excellent
+  if (feedback.grade === 'excellent' || feedback.grade === 'good') {
+    markChunkStatus(lesson.id, chunkIdx, 'done');
+  }
+}
+
+function advanceChunk(delta) {
+  const {lesson, chunkIdx} = state.currentChunk;
+  const chunks = getChunks(lesson);
+  const next = chunkIdx + delta;
+  if (next >= 0 && next < chunks.length) {
+    showQuiz(lesson, next);
+  } else if (next >= chunks.length) {
+    // lesson done — pick next lesson in book
+    const bookLessons = LESSONS.filter(l => l.book === lesson.book);
+    const idx = bookLessons.findIndex(l => l.id === lesson.id);
+    if (idx < bookLessons.length - 1) {
+      startLesson(bookLessons[idx+1].id);
+    } else {
+      showLessonComplete(lesson);
+    }
+  }
+}
+
+function showLessonComplete(lesson) {
+  document.getElementById('mainArea').innerHTML = `
+    <div class="welcome-card">
+      <h2>Lesson Complete</h2>
+      <p class="welcome-epigraph">Lesson ${lesson.id} · ${escHTML(lesson.title)}</p>
+      <p>You have finished all chunks in this lesson. Choose another from the table of contents, or try a random section.</p>
+      <button class="btn-primary" onclick="startRandom()" style="font-size:13px;padding:10px 28px;">Random Section →</button>
+    </div>
+  `;
+}
+
+function toggleReviewFromQuiz(lessonId, chunkIdx) {
+  markReview(lessonId, chunkIdx);
+  // Update button label without full re-render
+  const btn = document.getElementById('markReviewBtn');
+  if (btn) {
+    const isReview = (state.progress[lessonId]||{})[chunkIdx] === 'review';
+    btn.textContent = isReview ? '⚑ Unmark Review' : '⚑ Mark for Review';
+  }
+}
+
+function markReview(lessonId, chunkIdx) {
+  const current = (state.progress[lessonId] || {})[chunkIdx];
+  if (current === 'review') {
+    markChunkStatus(lessonId, chunkIdx, null); // toggle off
+  } else {
+    markChunkStatus(lessonId, chunkIdx, 'review');
+  }
+}
+
+function showLoading(msg) {
+  document.getElementById('mainArea').innerHTML = `
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">${escHTML(msg)}</div>
+    </div>
+  `;
+}
+
+function showError(msg) {
+  console.error(msg);
+}
+
+function escHTML(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════════════════
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && state.phase === 'quiz') {
+    submitTranslation();
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// DICTIONARY
+// ═══════════════════════════════════════════════════════
+
+function toggleDict() {
+  const panel = document.getElementById('dictPanel');
+  const arrow = document.getElementById('dictArrow');
+  const isOpen = panel.classList.toggle('open');
+  arrow.classList.toggle('open', isOpen);
+  if (isOpen) setTimeout(() => document.getElementById('dictInput').focus(), 220);
+}
+
+async function lookupWord() {
+  const input = document.getElementById('dictInput');
+  const word = input.value.trim().toLowerCase();
+  if (!word) return;
+  const results = document.getElementById('dictResults');
+  const btn = document.getElementById('dictSearchBtn');
+  results.innerHTML = '<div class="dict-loading">Quaerendum…</div>';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`https://api.latindictionary.io/api/v1/la-to-en/${encodeURIComponent(word)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    results.innerHTML = parseDictResponse(json, word);
+  } catch(e) {
+    results.innerHTML = `<div class="dict-error">Error: ${escHTML(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function parseDictResponse(json, query) {
+  const words = json?.data?.words;
+  if (!words || words.length === 0) {
+    return `<div class="dict-no-results">No results for <em>${escHTML(query)}</em></div>`;
+  }
+
+  // Debug: log raw structure to console so we can inspect
+  console.log('Dict API raw:', JSON.stringify(json).slice(0, 500));
+
+  const seen = new Set();
+  const entries = [];
+
+  for (const wordObj of words) {
+    const wordArr = wordObj.word || [];
+    for (const w of wordArr) {
+      const form = w.form || query;
+      const entryArr = w.entry || [];
+
+      for (const ent of entryArr) {
+        // Meanings live on the entry
+        const meanings = [];
+        const meanArr = ent.mean || [];
+        for (const m of meanArr) {
+          if (m && typeof m === 'string' && !meanings.includes(m)) meanings.push(m);
+        }
+
+        // Inflections are inside entry
+        const inflArr = ent.infl || [];
+        for (const infl of inflArr) {
+          const stem = infl.term?.stem || '';
+          const suff = infl.term?.suff || '';
+          const headword = (stem + suff) || form;
+          const pos = infl.pofs || infl.pos || '';
+          const key = headword + '|' + pos + '|' + (infl.conj||'') + (infl.decl||'');
+
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          // Part of speech line
+          const gramParts = [];
+          if (pos) gramParts.push(pos);
+          if (infl.conj && infl.conj !== 'xxx') gramParts.push(infl.conj + ' conj.');
+          if (infl.decl && infl.decl !== 'xxx') gramParts.push(infl.decl + ' decl.');
+
+          // Form details
+          const formParts = [];
+          const add = (v, label) => { if (v && v !== 'xxx' && v !== '') formParts.push(label ? `${label}: ${v}` : v); };
+          add(infl.mood, '');
+          add(infl.tense, '');
+          add(infl.voice, '');
+          add(infl.num, '');
+          add(infl.pers ? infl.pers + ' pers.' : '', '');
+          add(infl.gend, '');
+          add(infl['case'], '');
+
+          entries.push({ headword, gramParts, formParts, meanings });
+        }
+
+        // If entry has no infl array at all but has meanings, still show it
+        if (inflArr.length === 0 && meanings.length > 0) {
+          const key = form + '|noinfl|' + meanings[0];
+          if (!seen.has(key)) {
+            seen.add(key);
+            const pos = ent.pofs || '';
+            entries.push({ headword: form, gramParts: pos ? [pos] : [], formParts: [], meanings });
+          }
+        }
+      }
+    }
+  }
+
+  if (entries.length === 0) {
+    // Show raw JSON for debugging
+    const raw = JSON.stringify(json).slice(0, 300);
+    return `<div class="dict-no-results">No parseable entries. Raw: <code style="font-size:11px;word-break:break-all">${escHTML(raw)}</code></div>`;
+  }
+
+  return entries.map(e => `
+    <div class="dict-entry">
+      <div class="dict-headword">${escHTML(e.headword)}</div>
+      ${e.gramParts.length ? `<div class="dict-pos">${escHTML(e.gramParts.join(' · '))}</div>` : ''}
+      ${e.formParts.length ? `<div class="dict-forms"><span class="dict-meaning-label">Form: </span>${escHTML(e.formParts.join(', '))}</div>` : ''}
+      ${e.meanings.length ? `<div class="dict-meaning"><span class="dict-meaning-label">Meaning: </span>${escHTML(e.meanings.join('; '))}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+
+updateTokenIndicator();
+renderBookTabs();
+renderTOC();
+
+// Show token modal on first load if no key
+if (!state.apiKey) {
+  setTimeout(openTokenModal, 600);
+}
+</script>
+</body>
+</html>
